@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro" name="ur5">
+  <!--
+    This is a convenience top-level xacro which loads the macro for the UR5e
+    which defines the default values for the various "parameters files"
+    parameters for a UR5e.
+
+    This file is only useful when loading a stand-alone, completely isolated
+    robot with only default values for all parameters such as the kinematics,
+    visual and physical parameters and joint limits.
+
+    This file is not intended to be integrated into a larger scene or other
+    composite xacro.
+
+    Instead, xacro:include 'inc/ur5e_macro.xacro' and override the defaults
+    for the arguments to that macro.
+
+    Refer to 'inc/ur_macro.xacro' for more information.
+  -->
+  <xacro:include filename="$(find bimur_description)/urdf/inc/ur5_macro.xacro"/>
+
+  <!-- parameters -->
+   <xacro:arg name="joint_limit_params" default="$(find ur_description)/config/ur5/joint_limits.yaml"/>
+   <xacro:arg name="kinematics_params" default="$(find ur_description)/config/ur5/default_kinematics.yaml"/>
+   <xacro:arg name="physical_params" default="$(find ur_description)/config/ur5/physical_parameters.yaml"/>
+   <xacro:arg name="visual_params" default="$(find ur_description)/config/ur5/visual_parameters.yaml"/>
+   <xacro:arg name="transmission_hw_interface" default="hardware_interface/PositionJointInterface"/>
+   <xacro:arg name="safety_limits" default="false"/>
+   <xacro:arg name="safety_pos_margin" default="0.15"/>
+   <xacro:arg name="safety_k_position" default="20"/>
+
+  <xacro:ur5_robot
+    prefix=""
+    joint_limits_parameters_file="$(arg joint_limit_params)"
+    kinematics_parameters_file="$(arg kinematics_params)"
+    physical_parameters_file="$(arg physical_params)"
+    visual_parameters_file="$(arg visual_params)"
+    transmission_hw_interface="$(arg transmission_hw_interface)"
+    safety_limits="$(arg safety_limits)"
+    safety_pos_margin="$(arg safety_pos_margin)"
+    safety_k_position="$(arg safety_k_position)"/>
+
+
+  <!-- robotiq 85 -->
+  <xacro:include filename="$(find robotiq_85_description)/urdf/robotiq_85_gripper.urdf.xacro" />
+
+  <link name="world"/>
+  <link name="ee_link" />
+
+  <link name="frame">
+    <inertial>
+      <origin rpy  ="0.0 0 0" xyz="0.0 0.0 0.0"/>
+      <mass value="27.21"/>
+      <inertia
+        ixx="5.01" ixy="0.0" ixz="0.0"
+        iyy="5.07" iyz="0.0"
+        izz="3.20"/>
+    </inertial>
+    <collision>
+      <origin rpy="0.0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://bimur_description/meshes/UR5Frame.STL"/>
+      </geometry>
+    </collision>
+    <visual>
+      <origin rpy="0.0 0 0" xyz="0 0 0"/>
+      <geometry>
+        <mesh filename="package://bimur_description/meshes/UR5Frame.STL"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <link name="wall">
+    <inertial>
+      <origin xyz="0.23 0 0.755" rpy="0 0 0" />
+      <mass value="1"/>
+      <inertia
+        ixx="0.07" ixy="0.0" ixz="0.0"
+        iyy="0.40" iyz="0.0"
+        izz="0.33"/>
+    </inertial>
+    <visual>
+      <geometry>
+        <box size="2 2 0.05"/>
+      </geometry>
+      <material name="blue">
+        <color rgba="0 0 .8 1"/>
+      </material>
+    </visual>
+    <collision>
+      <geometry>
+        <box size="2 2 0.05"/>
+      </geometry>
+    </collision>
+  </link>
+
+
+  <joint name="frame_to_world" type="fixed">
+      <parent link="world"/>
+      <child link="frame"/>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+    </joint>
+
+    <joint name="wall_to_world" type="fixed">
+        <parent link="world"/>
+        <child link="wall"/>
+        <origin xyz="0.5 1.02 1" rpy="1.57 0 0"/>
+    </joint>
+
+    <!-- right arm -->
+    <joint name="ur5_to_frame" type="fixed">
+      <parent link="frame"/>
+      <child link = "base_link"/>
+      <origin xyz="0.265 0.635 1.275" rpy="-0.785 3.14 1.57"/>
+    </joint>
+
+    <!-- astra camera -->
+    <link name="camera_mount"/>
+    <joint name="camera_to_frame" type="fixed">
+      <parent link="frame"/>
+      <child link = "camera_mount"/>
+      <origin xyz="0.54 0.54 1.45" rpy="0 1.30 -1.57"/>
+    </joint>
+
+    <!-- Right robotiq 85 -->
+    <xacro:robotiq_85_gripper prefix="" parent="ee_link" >
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+    </xacro:robotiq_85_gripper>
+
+    <!-- Astra camera -->
+    <xacro:include filename="$(find bimur_description)/urdf/camera/astra.xacro"/>
+    <xacro:sensor_astra name="astra" parent="camera_mount" cam_px="0.01" cam_pz="${0.052}" meshes="package://bimur_description/meshes/rgbd" />
+
+</robot>

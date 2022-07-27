@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<launch>
+  <!--
+  Usage:
+  roslaunch bimur_bringup bimur_right_robot_real_moveit.launch robot_ip:=172.22.22.2 kinematics_config:="$(rospack find bimur_ur_launch)/etc/bimur_right_arm_calibration.yaml" gripper_test:=true
+  -->
+
+  <!-- <arg name="real_robot" default="true"/> -->
+  <arg name="gripper_test" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="robot_ip" doc="IP address by which the robot can be reached."/>
+  <arg name="kinematics_config" default="$(find bimur_description)/config/ur5_melodic_kinematic.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
+  <arg name="robot_description" default="$(find bimur_description)/launch/load_ur5.launch" doc="Robot description launch file."/>
+
+  <!-- ur5 driver -->
+  <!-- Load robot URDF -->
+  <include file="$(find ur_robot_driver)/launch/ur5_bringup.launch">
+    <arg name="debug" value="$(arg debug)"/>
+    <arg name="robot_ip" value="$(arg robot_ip)"/>
+    <arg name="kinematics_config" value="$(arg kinematics_config)"/>
+    <arg name="robot_description_file" value="$(arg robot_description)"/>
+  </include>
+
+  <!--gripper driver -->
+  <include file="$(find bimur_bringup)/launch/robotiq_85.launch">
+    <arg name="gripper_test" value="$(arg gripper_test)"/>
+    <arg name="comport" value="/dev/ttyUSB0"/>
+  </include>
+
+  <node name="joint_state_publisher" pkg="joint_state_publisher" type="joint_state_publisher">
+      <rosparam param="source_list">[/gripper/joint_states, /joint_states]</rosparam>
+  </node>
+
+  <!-- Run the main MoveIt executable -->
+  <!-- <include file="$(find bimur_ur5_moveit_config)/launch/move_group.launch">
+    <arg name="allow_trajectory_execution" value="true"/>
+    <arg name="fake_execution" value="false"/>
+    <arg name="info" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include> -->
+
+  <!-- Run Rviz and load the default config to see the state of the move_group node -->
+  <include file="$(find bimur_ur5_moveit_config)/launch/moveit_rviz.launch">
+    <arg name="rviz_config" value="true"/>
+    <arg name="debug" value="$(arg debug)"/>
+  </include>
+
+  <!-- Planning Functionality -->
+  <include ns="move_group" file="$(find bimur_ur5_moveit_config)/launch/planning_pipeline.launch.xml">
+    <arg name="pipeline" value="ompl" />
+  </include>
+
+</launch>
