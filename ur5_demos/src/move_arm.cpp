@@ -724,7 +724,8 @@ int main(int argc, char **argv)
 
 	ur5Behavior Obj;
 	Obj.init_pos();
-	Obj.stirringMotion();
+	// Obj.stirringMotion();
+	Obj.cartesianControl();
 	// Obj.shakingMotion();
 
 	// ros::Duration(2).sleep();
