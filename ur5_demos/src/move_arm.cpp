@@ -216,11 +216,14 @@ pcl::PointCloud<pcl::PointXYZ> ur5Behavior::detectObjects()
 {
 	pcl::PointCloud<pcl::PointXYZ> object;
 	ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
+	// ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
 	bimur_robot_vision::TabletopPerception srv;
 	
 	ROS_INFO("Detecting the Objects");
+	// std::cout<<"\n\nClient call : "<<client.call(srv)<<"\n";
 	if(client.call(srv))
 	{	
+		ROS_INFO("INSIDE - PHASE 1");	
 		// Shut Down if the cannot find the plane.
 		if(srv.response.is_plane_found == false)
 		{
@@ -228,6 +231,7 @@ pcl::PointCloud<pcl::PointXYZ> ur5Behavior::detectObjects()
 			ros::shutdown();
 		}
 		
+		ROS_INFO("INSIDE - PHASE 2");	
 		int num_objects = srv.response.cloud_clusters.size();
 		std::vector<pcl::PointCloud<pcl::PointXYZ>> detected_objects;
 		ROS_INFO("Number of Objects Found : %i", num_objects);
@@ -240,7 +244,7 @@ pcl::PointCloud<pcl::PointXYZ> ur5Behavior::detectObjects()
 			pcl::fromROSMsg(srv.response.cloud_clusters[i], cloud_i);
 			detected_objects.push_back(cloud_i);
 		}
-
+		ROS_INFO("INSIDE - PHASE 3");	
 
 		// Find the largest object out of all.
 		int object_index = 0;
@@ -254,14 +258,17 @@ pcl::PointCloud<pcl::PointXYZ> ur5Behavior::detectObjects()
 				object_index = i;
 			}
 		}		
+		ROS_INFO("INSIDE - PHASE 4");	
 		object = detected_objects[object_index];
 		target_object = object;
 		frame_id = object.header.frame_id;
 		ROS_INFO_STREAM(frame_id);
-		ros::spinOnce();
+		// ros::spinOnce();
 	}
 
+	ROS_INFO("INSIDE - PHASE 5");	
 	ros::spinOnce();
+	ROS_INFO("INSIDE - PHASE 6");	
 	return object;
 }
 
@@ -725,8 +732,8 @@ int main(int argc, char **argv)
 	ur5Behavior Obj;
 	Obj.init_pos();
 	// Obj.stirringMotion();
-	Obj.cartesianControl();
-	// Obj.shakingMotion();
+	// Obj.cartesianControl();
+	Obj.shakingMotion();
 
 	// ros::Duration(2).sleep();
 	// double temp_joints[6];

@@ -261,28 +261,40 @@ void waitForCloud(){
 	Purpose : collects a cloud by aggregating k successive frames
 */
 void waitForCloudK(int k){
+	// ROS_INFO("waitForCloudK Step 1.");
 	ros::Rate r(30);
 	
 	cloud_aggregated->clear();
+	// ROS_INFO("waitForCloudK Step 2.");
 	
 	int counter = 0;
 	
 	while (ros::ok()){
+		// ROS_INFO("waitForCloudK Step 3.");
+
 		ros::spinOnce();
 		
 		r.sleep();
+		// ROS_INFO("waitForCloudK Step 4.");
 		
 		if (new_cloud_available_flag){
 			
+			// ROS_INFO("waitForCloudK Step 5.");
+
 			*cloud_aggregated+=*cloud;
 			
+			// ROS_INFO("waitForCloudK Step 6.");
+
 			new_cloud_available_flag = false;
 			
 			counter ++;
 			
 			if (counter >= k){
+				// ROS_INFO("waitForCloudK Step 7.");
+				
 				cloud_aggregated->header = cloud->header;
 				break;
+				
 			}
 		}
 	}
@@ -298,10 +310,12 @@ void waitForCloudK(int k){
 bool seg_cb(bimur_robot_vision::TabletopPerception::Request &req, bimur_robot_vision::TabletopPerception::Response &res)
 {
 	//get the point cloud by aggregating k successive input clouds
+	// ROS_INFO("Inside callback.");
 	waitForCloudK(15);
 	cloud = cloud_aggregated;
 
 	//**Step 1: z-filter and voxel filter**//
+	// ROS_INFO("Step 1.");
 	
 	// Create the filtering object
 	pcl::PassThrough<PointT> pass;
@@ -309,6 +323,7 @@ bool seg_cb(bimur_robot_vision::TabletopPerception::Request &req, bimur_robot_vi
 	pass.setFilterFieldName ("z");
 	pass.setFilterLimits (0.0, 1.0);
 	pass.filter (*cloud);
+	// ROS_INFO("Step 2.");
 	
 	// Create the filtering object: downsample the dataset using a leaf size of 1cm
 	pcl::VoxelGrid<PointT> vg;
@@ -457,12 +472,11 @@ int main (int argc, char** argv)
 	ros::Subscriber sub = nh.subscribe (param_topic, 1, cloud_cb);
 
 	//debugging publisher
-	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("bimur_object_detector/cloud", 10);
+	cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/bimur_object_detector/cloud", 10);
 
 	//service
-	ros::ServiceServer service = nh.advertiseService("bimur_object_detector/detect", seg_cb); 
-	
-	
+	ros::ServiceServer service = nh.advertiseService("/bimur_object_detector/detect", seg_cb); 
+
 	tf::TransformListener listener;
 
 	//register ctrl-c

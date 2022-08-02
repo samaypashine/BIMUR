@@ -51,22 +51,16 @@ int main(int argc, char **argv)
     }
 
     ros::NodeHandle n;
-	ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("object_detection");
+	// ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("object_detection");
+	ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
 	
 	bimur_robot_vision::TabletopPerception srv;
-
 	if (client.call(srv)) {
-		//ROS_INFO("Plane found: "+ srv.response.is_plane_found);
+		ROS_INFO("Plane found: "+ srv.response.is_plane_found);
 		ROS_INFO("Objects found: " + (int)srv.response.cloud_clusters.size());
 	} else {
 		ROS_ERROR("Failed to call service");
 		return 1;
 	}
-
 	return 0;
 }
-
-
-
-
-
