@@ -9,6 +9,10 @@
  * 
  */
 #include <ros/ros.h>
+
+#include "joint_recorder/recorderMsg.h"
+#include "joint_recorder/recorderSrv.h"
+
 #include <signal.h>
 #include <iostream>
 #include <random>
@@ -16,6 +20,7 @@
 #include <math.h>
 #include <cstdlib>
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
 
 
 #include <arpa/inet.h>
@@ -60,6 +65,7 @@
 #include <moveit_visual_tools/moveit_visual_tools.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit_msgs/GetPositionIK.h>
+
 #include <robotiq_85_msgs/GripperCmd.h>
 
 
@@ -80,7 +86,14 @@ class ur5Behavior
 	ros::Publisher pose_pub;
 	ros::Publisher gripper_pub;
 	ros::Publisher command_pub;
+	// ros::Publisher digit_pub;
+	ros::Publisher realsense_frame_capture_pub;
+
 	ros::ServiceClient ik_client;
+
+	ros::ServiceClient clientObj;
+	joint_recorder::recorderSrv srvRequest;
+
 	geometry_msgs::PoseStamped current_button_pose;
 	moveit::planning_interface::MoveGroupInterface *group;
 
@@ -96,20 +109,26 @@ class ur5Behavior
 	~ur5Behavior();
 	void sig_handler(int sig);
 	int getch(void);
-	bool close_gripper();
-	bool open_gripper();
+	bool close_gripper(double, double, double);
+	bool open_gripper(double, double, double);
 	void init_pos();
-	pcl::PointCloud<pcl::PointXYZ> detectObjects();
-	geometry_msgs::Pose getPoseFromObject();
+	// pcl::PointCloud<pcl::PointXYZ> detectObjects();
+	// geometry_msgs::Pose getPoseFromObject();
 	geometry_msgs::Pose getPoseFromCoord(double, double, double);
 	double* inverseKinematic(geometry_msgs::Pose, double [], int);
-	int trajectoryChecker(moveit_msgs::RobotTrajectory);
-	void motionPlanner();
+	// int trajectoryChecker(moveit_msgs::RobotTrajectory);
+	// void motionPlanner(geometry_msgs::Pose);
 	std_msgs::String URScriptCommand(double [], double, double, double, double);
-	void cartesianControl();
+	// void cartesianControl();
 	void move_arm();
-	void shakingMotion();
-	void stirringMotion();
+	// void shakingMotion();
+	void stirringMotion_1();
+	void stirringMotion_2();
+	void stirringMotion_3();
+	void stirringMotion_4();
+	void action_position_top();
+	void action_position_down();
+	// void grabObject();
 };
 
 ur5Behavior::ur5Behavior()
@@ -122,13 +141,19 @@ ur5Behavior::ur5Behavior()
 	pose_pub = n.advertise<geometry_msgs::PoseStamped>("/move_arm_demo/pose", 10);
 	gripper_pub = n.advertise<robotiq_85_msgs::GripperCmd>("/gripper/cmd", 10);
 	command_pub = n.advertise<std_msgs::String>("/ur_hardware_interface/script_command", 10);
+	
+	// digit_pub = n.advertise<std_msgs::Bool>("/digit_sensor", 10);
+	// realsense_frame_capture_pub = n.advertise<std_msgs::Bool>("/frame_capture", 10);
 	ik_client = n.serviceClient<moveit_msgs::GetPositionIK>("/compute_ik");
+
+	clientObj = n.serviceClient<joint_recorder::recorderSrv>("data_recording_service");
 
 	group = new moveit::planning_interface::MoveGroupInterface("manipulator");
 	// group->setPlannerId("RRTConfigDefault");
-	group->setPlannerId("TRRT");
+	group->setPlannerId("RRTConnect");
+	// group->setPlannerId("RRTConnectkConfigDefault");
     group->setGoalTolerance(0.01);
-	group->setPlanningTime(10);
+	group->setPlanningTime(15);
 
 	frame_id = "camera_depth_optical_frame";
 	init_pos();
@@ -164,24 +189,24 @@ int ur5Behavior::getch(void)
     return ch;
 }
 
-bool ur5Behavior::close_gripper()
+bool ur5Behavior::close_gripper(double position = 0.0, double speed = 1.0, double force = 1.0)
 {
 	robotiq_85_msgs::GripperCmd msg;
-	msg.position = 0.0;
-	msg.speed = 1.0;
-	msg.force = 60.0;
+	msg.position = position;
+	msg.speed = speed;
+	msg.force = force;
 	gripper_pub.publish(msg);
 
 	ros::spinOnce();	
 	return 0;
 }
 
-bool ur5Behavior::open_gripper()
+bool ur5Behavior::open_gripper(double position = 1.0, double speed = 1.0, double force = 100.0)
 {	
 	robotiq_85_msgs::GripperCmd msg;
-	msg.position = 1.0;
-	msg.speed = 1.0;
-	msg.force = 100.0;
+	msg.position = position;
+	msg.speed = speed;
+	msg.force = force;
 	gripper_pub.publish(msg);
 
 	ros::spinOnce();
@@ -205,6 +230,47 @@ void ur5Behavior::init_pos()
 	ros::spinOnce();
 }
 
+
+void ur5Behavior::action_position_top()
+{
+	ROS_INFO("Moving to the initial position.");
+	// open_gripper();
+	std::map<std::string, double> target;
+	target["shoulder_pan_joint"] =  -0.625642;
+	target["shoulder_lift_joint"] =  -0.530822;
+	target["elbow_joint"] =  2.27726;
+	target["wrist_1_joint"] = 3.49744;
+	target["wrist_2_joint"] = -4.10288;
+	target["wrist_3_joint"] = -2.34607;
+
+	// X : 0.064, Y : -0.078, Z : 0.556
+	// [-0.625642, -0.530822, 2.27726, 3.49744, -4.10288, -2.34607]
+
+	group->setJointValueTarget(target);
+	move_arm();
+	ros::spinOnce();
+}
+
+void ur5Behavior::action_position_down()
+{
+	ROS_INFO("Moving to the initial position.");
+	// open_gripper();
+	std::map<std::string, double> target;
+	target["shoulder_pan_joint"] =  -0.750101;
+	target["shoulder_lift_joint"] =  -0.712315;
+	target["elbow_joint"] =  2.25894;
+	target["wrist_1_joint"] = 3.76561;
+	target["wrist_2_joint"] = -4.16968;
+	target["wrist_3_joint"] = -2.22077;
+
+	// X : 0.054, Y : -0.058, Z : 0.636
+	// [-0.750101, -0.712315, 2.25894, 3.76561, -4.16968, -2.22077]
+
+	group->setJointValueTarget(target);
+	move_arm();
+	ros::spinOnce();
+}
+
 void ur5Behavior::move_arm()
 {
 	ROS_INFO("Moving the Arm.");
@@ -212,79 +278,79 @@ void ur5Behavior::move_arm()
 	ros::spinOnce();
 }
 
-pcl::PointCloud<pcl::PointXYZ> ur5Behavior::detectObjects()
-{
-	pcl::PointCloud<pcl::PointXYZ> object;
-	ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
-	// ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
-	bimur_robot_vision::TabletopPerception srv;
+// pcl::PointCloud<pcl::PointXYZ> ur5Behavior::detectObjects()
+// {
+// 	pcl::PointCloud<pcl::PointXYZ> object;
+// 	ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
+// 	// ros::ServiceClient client = n.serviceClient<bimur_robot_vision::TabletopPerception>("/bimur_object_detector/detect");
+// 	bimur_robot_vision::TabletopPerception srv;
 	
-	ROS_INFO("Detecting the Objects");
-	// std::cout<<"\n\nClient call : "<<client.call(srv)<<"\n";
-	if(client.call(srv))
-	{	
-		ROS_INFO("INSIDE - PHASE 1");	
-		// Shut Down if the cannot find the plane.
-		if(srv.response.is_plane_found == false)
-		{
-			ROS_ERROR("No object Found. Exitting the Code.");
-			ros::shutdown();
-		}
+// 	ROS_INFO("Detecting the Objects");
+// 	// std::cout<<"\n\nClient call : "<<client.call(srv)<<"\n";
+// 	if(client.call(srv))
+// 	{	
+// 		// ROS_INFO("INSIDE - PHASE 1");	
+// 		// Shut Down if the cannot find the plane.
+// 		if(srv.response.is_plane_found == false)
+// 		{
+// 			ROS_ERROR("No object Found. Exitting the Code.");
+// 			ros::shutdown();
+// 		}
 		
-		ROS_INFO("INSIDE - PHASE 2");	
-		int num_objects = srv.response.cloud_clusters.size();
-		std::vector<pcl::PointCloud<pcl::PointXYZ>> detected_objects;
-		ROS_INFO("Number of Objects Found : %i", num_objects);
+// 		// ROS_INFO("INSIDE - PHASE 2");	
+// 		int num_objects = srv.response.cloud_clusters.size();
+// 		std::vector<pcl::PointCloud<pcl::PointXYZ>> detected_objects;
+// 		ROS_INFO("Number of Objects Found : %i", num_objects);
 
 
-		// Convert object to PCL format		
-		for (int i = 0; i < num_objects; i++)
-		{
-			pcl::PointCloud<pcl::PointXYZ> cloud_i;
-			pcl::fromROSMsg(srv.response.cloud_clusters[i], cloud_i);
-			detected_objects.push_back(cloud_i);
-		}
-		ROS_INFO("INSIDE - PHASE 3");	
+// 		// Convert object to PCL format		
+// 		for (int i = 0; i < num_objects; i++)
+// 		{
+// 			pcl::PointCloud<pcl::PointXYZ> cloud_i;
+// 			pcl::fromROSMsg(srv.response.cloud_clusters[i], cloud_i);
+// 			detected_objects.push_back(cloud_i);
+// 		}
+// 		// ROS_INFO("INSIDE - PHASE 3");	
 
-		// Find the largest object out of all.
-		int object_index = 0;
-		int max = detected_objects[0].points.size();
-		for (int i = 0; i < detected_objects.size(); i++)
-		{
-			int num_points = detected_objects[i].points.size();
-			if (num_points > max)
-			{
-				max = num_points;
-				object_index = i;
-			}
-		}		
-		ROS_INFO("INSIDE - PHASE 4");	
-		object = detected_objects[object_index];
-		target_object = object;
-		frame_id = object.header.frame_id;
-		ROS_INFO_STREAM(frame_id);
-		// ros::spinOnce();
-	}
+// 		// Find the largest object out of all.
+// 		int object_index = 0;
+// 		int max = detected_objects[0].points.size();
+// 		for (int i = 0; i < detected_objects.size(); i++)
+// 		{
+// 			int num_points = detected_objects[i].points.size();
+// 			if (num_points > max)
+// 			{
+// 				max = num_points;
+// 				object_index = i;
+// 			}
+// 		}		
+// 		// ROS_INFO("INSIDE - PHASE 4");	
+// 		object = detected_objects[object_index];
+// 		target_object = object;
+// 		frame_id = object.header.frame_id;
+// 		ROS_INFO_STREAM(frame_id);
+// 		// ros::spinOnce();
+// 	}
 
-	ROS_INFO("INSIDE - PHASE 5");	
-	ros::spinOnce();
-	ROS_INFO("INSIDE - PHASE 6");	
-	return object;
-}
+// 	// ROS_INFO("INSIDE - PHASE 5");	
+// 	ros::spinOnce();
+// 	// ROS_INFO("INSIDE - PHASE 6");	
+// 	return object;
+// }
 
-geometry_msgs::Pose ur5Behavior::getPoseFromObject()
-{
-	geometry_msgs::Pose pose_i;
-	Eigen::Vector4f centroid;
-	pcl::compute3DCentroid(target_object, centroid);
+// geometry_msgs::Pose ur5Behavior::getPoseFromObject()
+// {
+// 	geometry_msgs::Pose pose_i;
+// 	Eigen::Vector4f centroid;
+// 	pcl::compute3DCentroid(target_object, centroid);
 
-	pose_i.position.x = centroid(0);
-	pose_i.position.y = centroid(1);
-	pose_i.position.z = Z_coord;
-	pose_i.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.50, 0, 0);
+// 	pose_i.position.x = centroid(0);
+// 	pose_i.position.y = centroid(1);
+// 	pose_i.position.z = Z_coord;
+// 	pose_i.orientation = tf::createQuaternionMsgFromRollPitchYaw(0.50, 0, 0);
 
-	return pose_i;
-}
+// 	return pose_i;
+// }
 
 geometry_msgs::Pose ur5Behavior::getPoseFromCoord(double x, double y, double z)
 {
@@ -340,117 +406,118 @@ double* ur5Behavior::inverseKinematic(geometry_msgs::Pose pose_i, double joint[6
 	return joint;
 }
 
-int ur5Behavior::trajectoryChecker(moveit_msgs::RobotTrajectory trajectoryPlan)
-{
-	ROS_INFO("Checking the Trajectory");
-	std::vector<trajectory_msgs::JointTrajectoryPoint> trajectoryPoints;
-	trajectoryPoints = trajectoryPlan.joint_trajectory.points;
+// int ur5Behavior::trajectoryChecker(moveit_msgs::RobotTrajectory trajectoryPlan)
+// {
+// 	ROS_INFO("Checking the Trajectory");
+// 	std::vector<trajectory_msgs::JointTrajectoryPoint> trajectoryPoints;
+// 	trajectoryPoints = trajectoryPlan.joint_trajectory.points;
 
-	std::vector<int>::size_type vectorSize = trajectoryPoints.size();
+// 	std::vector<int>::size_type vectorSize = trajectoryPoints.size();
 
-	for (int i = 0; i < vectorSize; i++)
-	{
-		if (trajectoryPoints[i].positions[0] < -1.30173 || trajectoryPoints[i].positions[0] > 0.52330)
-		{	
-			// ROS_INFO_STREAM(trajectoryPlan);
-			ROS_WARN("Trajectory not Feasible due to position 0");
-			std::cout<<"Point : "<<i;
-			// pressEnter();
-			return 0;
-		}
+// 	for (int i = 0; i < vectorSize; i++)
+// 	{
+// 		// if (trajectoryPoints[i].positions[0] > 0.52330 || trajectoryPoints[i].positions[0] < -1.30173)
+// 		if (trajectoryPoints[i].positions[0] < -1.74 || trajectoryPoints[i].positions[0] > 3.14)
+// 		{	
+// 			ROS_INFO_STREAM(trajectoryPlan);
+// 			ROS_WARN("Trajectory not Feasible due to position 0");
+// 			std::cout<<"Point : "<<i;
+// 			getch();
+// 			return 0;
+// 		}
 		
-		if (trajectoryPoints[i].positions[1] < -2.27893 || trajectoryPoints[i].positions[1] > -0.03000)
-		{	
-			// ROS_INFO_STREAM(trajectoryPlan);
-			ROS_WARN("Trajectory not Feasible due to position 1");
-			std::cout<<"Point : "<<i;
-			// pressEnter();
-			return 0;
-		}
+// 		if (trajectoryPoints[i].positions[1] < -2.61 || trajectoryPoints[i].positions[1] > 3.14)
+// 		{	
+// 			ROS_INFO_STREAM(trajectoryPlan);
+// 			ROS_WARN("Trajectory not Feasible due to position 1");
+// 			std::cout<<"Point : "<<i;
+// 			getch();
+// 			return 0;
+// 		}
 		
-		if (trajectoryPoints[i].positions[2] < 0.90000 || trajectoryPoints[i].positions[2] > 2.77799)
-		{	
-			// ROS_INFO_STREAM(trajectoryPlan);
-			ROS_WARN("Trajectory not Feasible due to position 2");
-			std::cout<<"Point : "<<i;
-			// pressEnter();
-			return 0;
-		}
+// 		if (trajectoryPoints[i].positions[2] < 0.50 || trajectoryPoints[i].positions[2] > 3.14)
+// 		{	
+// 			ROS_INFO_STREAM(trajectoryPlan);
+// 			ROS_WARN("Trajectory not Feasible due to position 2");
+// 			std::cout<<"Point : "<<i;
+// 			getch();
+// 			return 0;
+// 		}
 
-		if (trajectoryPoints[i].positions[3] < 3.50000 || trajectoryPoints[i].positions[3] > 5.00000)
-		{	
-			// ROS_INFO_STREAM(trajectoryPlan);
-			ROS_WARN("Trajectory not Feasible due to position 3");
-			std::cout<<"Point : "<<i;
-			// pressEnter();
-			return 0;
-		}
+// 		// if (trajectoryPoints[i].positions[3] > 5.00000 || trajectoryPoints[i].positions[3] < 3.50000)
+// 		// {	
+// 		// 	ROS_INFO_STREAM(trajectoryPlan);
+// 		// 	ROS_WARN("Trajectory not Feasible due to position 3");
+// 		// 	std::cout<<"Point : "<<i;
+// 		// 	getch();
+// 		// 	return 0;
+// 		// }
 
-		if (trajectoryPoints[i].positions[4] < -4.60000 || trajectoryPoints[i].positions[4] > -3.80000)
-		{	
-			// ROS_INFO_STREAM(trajectoryPlan);
-			ROS_WARN("Trajectory not Feasible due to position 4");
-			std::cout<<"Point : "<<i;
-			// pressEnter();
-			return 0;
-		}
+// 		// if (trajectoryPoints[i].positions[4] > -3.80000 || trajectoryPoints[i].positions[4] < -4.60000)
+// 		// {	
+// 		// 	ROS_INFO_STREAM(trajectoryPlan);
+// 		// 	ROS_WARN("Trajectory not Feasible due to position 4");
+// 		// 	std::cout<<"Point : "<<i;
+// 		// 	getch();
+// 		// 	return 0;
+// 		// }
 
-		if (trajectoryPoints[i].positions[5] < -6.67000 || trajectoryPoints[i].positions[5] > 1.370000)
-		{	
-			// ROS_INFO_STREAM(trajectoryPlan);
-			ROS_WARN("Trajectory not Feasible due to position 5");
-			std::cout<<"Point : "<<i;
-			// pressEnter();
-			return 0;
-		}
-	}
-	ros::spinOnce();
-	return 1;
-}
+// 		// if (trajectoryPoints[i].positions[5] > 1.370000 || trajectoryPoints[i].positions[5] < -6.67000)
+// 		// {	
+// 		// 	ROS_INFO_STREAM(trajectoryPlan);
+// 		// 	ROS_WARN("Trajectory not Feasible due to position 5");
+// 		// 	std::cout<<"Point : "<<i;
+// 		// 	getch();
+// 		// 	return 0;
+// 		// }
+// 	}
+// 	ros::spinOnce();
+// 	return 1;
+// }
 
-void ur5Behavior::motionPlanner()
-{
-	double temp_joint[6];
-	geometry_msgs::Pose pose_i = getPoseFromObject();	
-	double* joint_angles = inverseKinematic(pose_i, temp_joint, 1);
+// void ur5Behavior::motionPlanner(geometry_msgs::Pose pose_i)
+// {
+// 	double temp_joint[6];
+// 	// geometry_msgs::Pose pose_i = getPoseFromObject();	
+// 	double* joint_angles = inverseKinematic(pose_i, temp_joint, 1);
 
-	int choice = 0;
-	int numOfTries = 10;
-	while(choice != 1)
-	{
-		ROS_INFO("Planning the Motion");
-		moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-		moveit::planning_interface::MoveItErrorCode planStatus = group->plan(my_plan);
-		ROS_INFO("Plan Status : %s", planStatus ? "Success" : "Failed");
+// 	int choice = 0;
+// 	int numOfTries = 10;
+// 	while(choice != 1)
+// 	{
+// 		ROS_INFO("Planning the Motion");
+// 		moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+// 		moveit::planning_interface::MoveItErrorCode planStatus = group->plan(my_plan);
+// 		ROS_INFO("Plan Status : %s", planStatus ? "Success" : "Failed");
 		
-		if (planStatus)
-		{
-			moveit_msgs::RobotTrajectory trajectoryPlan = my_plan.trajectory_;
-			choice = trajectoryChecker(trajectoryPlan);
-			// choice = 1;
+// 		if (planStatus)
+// 		{
+// 			moveit_msgs::RobotTrajectory trajectoryPlan = my_plan.trajectory_;
+// 			// choice = trajectoryChecker(trajectoryPlan);
+// 			choice = 1;
 
-			if (choice == 0)
-			{
-				ROS_WARN("Trajectory Status : NOT GOOD");
-				if (numOfTries > 0)
-					numOfTries -= 1;
-			}
-			else
-			{
-				ROS_INFO("Trajectory Status : Good");
-			}
-		}
+// 			if (choice == 0)
+// 			{
+// 				ROS_WARN("Trajectory Status : NOT GOOD");
+// 				if (numOfTries > 0)
+// 					numOfTries -= 1;
+// 			}
+// 			else
+// 			{
+// 				ROS_INFO("Trajectory Status : Good");
+// 			}
+// 		}
 
-		if (numOfTries == 0 && choice == 0)
-		{
-			ROS_ERROR("No Feasible Plan possible for the position.");
-			ROS_INFO("Exitting the Code.");
-			init_pos();
-			ros::shutdown();
-		}
-	}
-	ros::spinOnce();
-}
+// 		if (numOfTries == 0 && choice == 0)
+// 		{
+// 			ROS_ERROR("No Feasible Plan possible for the position.");
+// 			ROS_INFO("Exitting the Code.");
+// 			init_pos();
+// 			ros::shutdown();
+// 		}
+// 	}
+// 	ros::spinOnce();
+// }
 
 std_msgs::String ur5Behavior::URScriptCommand(double joint[], double a = 0.20, double v = 0.20, double t = 0, double r = 0)
 {
@@ -490,236 +557,708 @@ std_msgs::String ur5Behavior::URScriptCommand(double joint[], double a = 0.20, d
 	return command;
 }
 
-void ur5Behavior::cartesianControl()
-{
-	double x = 0.429;
-	double y = -0.278;
-	double z = 0.736;
-	double Rx = 0;
-	double Ry = 0;
-	double Rz = 0;
+// void ur5Behavior::cartesianControl()
+// {
+// 	double x = 0.429;
+// 	double y = -0.278;
+// 	double z = 0.736;
+// 	double Rx = 0;
+// 	double Ry = 0;
+// 	double Rz = 0;
 
-	double a = 0.25;
-	double v = 0.25;
-	double t = 0;
-	double r = 0;
-
-
-	int trigger = 99;
-	while (trigger != 48)
-	{
-		std::cout<<"Controller : ";
-		trigger = getch();
-		std::cout<<trigger<<"\n";
-
-		switch (trigger)
-		{
-			case 105: // i - key
-						z -= 0.005;
-						break;
-
-			case 107: // k - key
-						z += 0.005;
-						break;
-
-			case 108: // l - key
-						x -= 0.005;
-						break;
-
-			case 106: // j - key
-						x += 0.005;
-						break;
-
-			case 111: // o - key
-						y -= 0.005;
-						break;
-
-			case 117: // u - key
-						y += 0.005;
-						break;
+// 	double a = 0.25;
+// 	double v = 0.25;
+// 	double t = 0;
+// 	double r = 0;
 
 
+// 	int trigger = 99;
+// 	while (trigger != 48)
+// 	{
+// 		std::cout<<"Controller : ";
+// 		trigger = getch();
+// 		std::cout<<trigger<<"\n";
+
+// 		switch (trigger)
+// 		{
+// 			case 105: // i - key
+// 						z -= 0.005;
+// 						break;
+
+// 			case 107: // k - key
+// 						z += 0.005;
+// 						break;
+
+// 			case 108: // l - key
+// 						x -= 0.005;
+// 						break;
+
+// 			case 106: // j - key
+// 						x += 0.005;
+// 						break;
+
+// 			case 111: // o - key
+// 						y -= 0.005;
+// 						break;
+
+// 			case 117: // u - key
+// 						y += 0.005;
+// 						break;
 
 
-			// case 119: // w - key
-			// 			Rz -= 0.205;
-			// 			break;
-
-			// case 115: // s - key
-			// 			Rz += 0.205;
-			// 			break;
-
-			// case 100: // d - key
-			// 			Rx -= 0.205;
-			// 			break;
-
-			// case 97: // a - key
-			// 			Rx += 0.205;
-			// 			break;
-
-			// case 101: // e - key
-			// 			Ry -= 0.205;
-			// 			break;
-
-			// case 113: // q - key
-			// 			Ry += 0.205;
-			// 			break;
-		}
-		// std::cout<<"\nX : "<<x<<", Y : "<<y<<", Z : "<<z<<"\n";
-		double temp_joints[6];
-		geometry_msgs::Pose pose_i = getPoseFromCoord(x, y, z);	
-		double* joint_angles = inverseKinematic(pose_i, temp_joints);
-		std_msgs::String command = URScriptCommand(joint_angles, a, v, t, r); 
-		ROS_INFO_STREAM(command);
-		command_pub.publish(command);
-	}
-}
-
-void ur5Behavior::shakingMotion()
-{
-	double temp_joints[6];
-	detectObjects();
-	geometry_msgs::Pose pose_i = getPoseFromObject();
-	double* joint_angles = inverseKinematic(pose_i, temp_joints);
-	ROS_INFO("Moving Above the Object");
-	std_msgs::String command = URScriptCommand(joint_angles, 0.90, 0.90);
-	command_pub.publish(command);
-	getch();
-
-	// Lowering the Arm
-	ROS_INFO("Lowering the arm.");
-	geometry_msgs::Pose pose_2 = getPoseFromCoord(pose_i.position.x, pose_i.position.y+0.02, pose_i.position.z+0.10);
-	joint_angles = inverseKinematic(pose_2, temp_joints);
-	command = URScriptCommand(joint_angles, 0.90, 0.90);
-	command_pub.publish(command);
-	getch();
-	close_gripper();
-	getch();
 
 
-	// Going to the action position.
-	ROS_INFO("Moving towards the action position.");
-	geometry_msgs::Pose pose_3 = getPoseFromCoord(0.04, -0.07, Z_coord);
-	joint_angles = inverseKinematic(pose_3, temp_joints);
-	command = URScriptCommand(joint_angles, 0.90, 0.90);
-	command_pub.publish(command);
-	getch();
+// 			// case 119: // w - key
+// 			// 			Rz -= 0.205;
+// 			// 			break;
+
+// 			// case 115: // s - key
+// 			// 			Rz += 0.205;
+// 			// 			break;
+
+// 			// case 100: // d - key
+// 			// 			Rx -= 0.205;
+// 			// 			break;
+
+// 			// case 97: // a - key
+// 			// 			Rx += 0.205;
+// 			// 			break;
+
+// 			// case 101: // e - key
+// 			// 			Ry -= 0.205;
+// 			// 			break;
+
+// 			// case 113: // q - key
+// 			// 			Ry += 0.205;
+// 			// 			break;
+// 		}
+// 		std::cout<<"\nX : "<<x<<", Y : "<<y<<", Z : "<<z<<"\n";
+// 		double temp_joints[6];
+// 		geometry_msgs::Pose pose_i = getPoseFromCoord(x, y, z);	
+// 		double* joint_angles = inverseKinematic(pose_i, temp_joints);
+// 		std_msgs::String command = URScriptCommand(joint_angles, a, v, t, r); 
+// 		ROS_INFO_STREAM(command);
+// 		std::cout<<"\n["<<joint_angles[0]<<", "<<joint_angles[1]<<", "<<joint_angles[2]<<", "<<joint_angles[3]<<", "<<joint_angles[4]<<", "<<joint_angles[5]<<"].";
+// 		command_pub.publish(command);
+// 	}
+// }
+
+// void ur5Behavior::shakingMotion()
+// {
+// 	double temp_joints[6];
+// 	detectObjects();
+// 	geometry_msgs::Pose pose_i = getPoseFromObject();
+// 	double* joint_angles = inverseKinematic(pose_i, temp_joints);
+// 	ROS_INFO("Moving Above the Object");
+// 	std_msgs::String command = URScriptCommand(joint_angles, 0.90, 0.90);
+// 	command_pub.publish(command);
+// 	getch();
+
+// 	// Lowering the Arm
+// 	ROS_INFO("Lowering the arm.");
+// 	geometry_msgs::Pose pose_2 = getPoseFromCoord(pose_i.position.x, pose_i.position.y+0.02, pose_i.position.z+0.10);
+// 	joint_angles = inverseKinematic(pose_2, temp_joints);
+// 	command = URScriptCommand(joint_angles, 0.90, 0.90);
+// 	command_pub.publish(command);
+// 	getch();
+// 	close_gripper();
+// 	getch();
 
 
-	// Shake it up!!
-	int rotations = 10;
-	double a = 1.50;
-	double v = 1.50;
-	double radius = 0.750;
-	ROS_INFO("Executing the Motion.");
-	while (rotations > 0)
-	{	
-		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
-		joint_angles[3] -= radius;
-		joint_angles[4] -= radius;
-		command = URScriptCommand(joint_angles, a, v);
-		command_pub.publish(command);
-		sleep(1.5);
+// 	// Going to the action position.
+// 	ROS_INFO("Moving towards the action position.");
+// 	geometry_msgs::Pose pose_3 = getPoseFromCoord(0.04, -0.07, Z_coord);
+// 	joint_angles = inverseKinematic(pose_3, temp_joints);
+// 	command = URScriptCommand(joint_angles, 0.90, 0.90);
+// 	command_pub.publish(command);
+// 	getch();
 
 
-		joint_angles[3] += radius;
-		joint_angles[4] += radius;
-		command = URScriptCommand(joint_angles, a, v);
-		command_pub.publish(command);
-		sleep(1.5);
+// 	// Shake it up!!
+// 	int rotations = 60;
+// 	double a = 1.50;
+// 	double v = 1.50;
+// 	double radius = 0.750;
+// 	ROS_INFO("Executing the Motion.");
+// 	while (rotations > 0)
+// 	{	
+// 		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
+// 		joint_angles[3] -= radius;
+// 		joint_angles[4] -= radius;
+// 		command = URScriptCommand(joint_angles, a, v);
+// 		command_pub.publish(command);
+// 		sleep(1.5);
 
 
-		joint_angles[3] += radius;
-		// joint_angles[4] -= radius;
-		command = URScriptCommand(joint_angles, a, v);
-		command_pub.publish(command);
-		sleep(1.5);
+// 		joint_angles[3] += radius;
+// 		joint_angles[4] += radius;
+// 		command = URScriptCommand(joint_angles, a, v);
+// 		command_pub.publish(command);
+// 		sleep(1.5);
 
-		joint_angles[3] -= radius;
-		// joint_angles[4] += radius;
-		command = URScriptCommand(joint_angles, a, v);
-		command_pub.publish(command);
-		sleep(1.5);
-		rotations--;
-	}
 
-	// Going to the action position.
-	ROS_INFO("Moving towards the action position.");
-	pose_3 = getPoseFromCoord(0.04, -0.07, Z_coord);
-	joint_angles = inverseKinematic(pose_3, temp_joints);
-	command = URScriptCommand(joint_angles);
-	command_pub.publish(command);
-	getch();
-	open_gripper();
-	ros::spinOnce();
-}
+// 		joint_angles[3] += radius;
+// 		// joint_angles[4] -= radius;
+// 		command = URScriptCommand(joint_angles, a, v);
+// 		command_pub.publish(command);
+// 		sleep(1.5);
 
-void ur5Behavior::stirringMotion()
-{
+// 		joint_angles[3] -= radius;
+// 		// joint_angles[4] += radius;
+// 		command = URScriptCommand(joint_angles, a, v);
+// 		command_pub.publish(command);
+// 		sleep(1.5);
+// 		rotations--;
+// 	}
+
+// 	// Going to the action position.
+// 	ROS_INFO("Moving towards the action position.");
+// 	pose_3 = getPoseFromCoord(0.04, -0.07, Z_coord);
+// 	joint_angles = inverseKinematic(pose_3, temp_joints);
+// 	command = URScriptCommand(joint_angles);
+// 	command_pub.publish(command);
+// 	getch();
+// 	open_gripper();
+// 	ros::spinOnce();
+// }
+
+void ur5Behavior::stirringMotion_1()
+{	
+	ROS_INFO("Motion 1");
 	ROS_INFO("Attach the end effector.");
 	getch();
 	close_gripper();
 	getch();
 
-	int rotations = 10;
+	double temp_joints_c[6];
+	double temp_joints_1[6];
+	double temp_joints_2[6];
+	double temp_joints_3[6];
+	double temp_joints_4[6];
+	int rotations = 5;
 	double a = 1.50;
 	double v = 1.50;
-	double radius = 0.05;
+	double radius = 0.02;
 
-	double temp_joints[6];
-	detectObjects();
-	geometry_msgs::Pose pose_i = getPoseFromObject();
-	pose_i.position.z -= 0.10;
-	double* joint_angles = inverseKinematic(pose_i, temp_joints);
+
+	// double joint_angles[6];
+	// joint_angles[0] = -0.72186818;
+	// joint_angles[1] =  -0.7834783;
+	// joint_angles[2] =  2.24379529;
+	// joint_angles[3] =  3.88073959;
+	// joint_angles[4] =  -4.07150408;
+	// joint_angles[5] =  -3.81738414;
+
+	// double temp_joints[6];
+	// detectObjects();
+	// geometry_msgs::Pose pose_i = getPoseFromObject();
+	// pose_i.position.z -= 0.10;
+	// double* joint_angles = inverseKinematic(pose_i, temp_joints);
 	ROS_INFO("Moving Above the Container");
-	std_msgs::String command = URScriptCommand(joint_angles, 0.90, 0.90);
-	command_pub.publish(command);
+	action_position_top();
+	// std_msgs::String command = URScriptCommand(joint_angles, 0.90, 0.90);
+	// command_pub.publish(command);
 	getch();
 
 	// Lowering the Arm
 	ROS_INFO("Lowering the arm.");
-	geometry_msgs::Pose pose_2 = getPoseFromCoord(pose_i.position.x, pose_i.position.y, pose_i.position.z+0.10);
-	joint_angles = inverseKinematic(pose_2, temp_joints);
-	command = URScriptCommand(joint_angles, 0.90, 0.90);
-	command_pub.publish(command);
+	action_position_down();
+	// geometry_msgs::Pose pose_2 = getPoseFromCoord(pose_i.position.x, pose_i.position.y, pose_i.position.z+0.10);
+	// joint_angles = inverseKinematic(pose_2, temp_joints);
+	// command = URScriptCommand(joint_angles, 0.90, 0.90);
+	// command_pub.publish(command);
 	getch();
+
+
+	double x = 0.054;
+	double y = -0.058;
+	double z = 0.636;
+	// X : 0.054, Y : -0.058, Z : 0.636
+
+	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);
+	ROS_INFO("Past get pose");
+	double* joint_angles_c = inverseKinematic(pose_c, temp_joints_c);
+	ROS_INFO("Past inverse");
+
+	geometry_msgs::Pose pose_1 = getPoseFromCoord(x, y-radius, z);	
+	double* joint_angles_1 = inverseKinematic(pose_1, temp_joints_1);
+
+	geometry_msgs::Pose pose_2 = getPoseFromCoord(x+radius, y, z);	
+	double* joint_angles_2 = inverseKinematic(pose_2, temp_joints_2);
+	
+	geometry_msgs::Pose pose_3 = getPoseFromCoord(x, y+radius, z);	
+	double* joint_angles_3 = inverseKinematic(pose_3, temp_joints_3);
+
+	geometry_msgs::Pose pose_4 = getPoseFromCoord(x-radius, y, z);	
+	double* joint_angles_4 = inverseKinematic(pose_4, temp_joints_4);
+
+
+	std_msgs::String point_c = URScriptCommand(joint_angles_c, a, v);
+	std_msgs::String point_1 = URScriptCommand(joint_angles_1, a, v);
+	std_msgs::String point_2 = URScriptCommand(joint_angles_2, a, v);
+	std_msgs::String point_3 = URScriptCommand(joint_angles_3, a, v);
+	std_msgs::String point_4 = URScriptCommand(joint_angles_4, a, v);
+	
+
+
+
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion1_joint_states.csv";
+    srvRequest.request.topic.data = "/joint_states";
+    clientObj.call(srvRequest); //set filename/path node1
+	ROS_INFO("Called for joint_states");
+	getch();
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion1_gripper_joint_states.csv";
+    srvRequest.request.topic.data = "/gripper/joint_states";
+	clientObj.call(srvRequest); //set filename/path node2
+    ROS_INFO("Called for gripper_joint_states");
+	getch();
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion1_wrench.csv";
+    srvRequest.request.topic.data = "/wrench";
+    clientObj.call(srvRequest); //set filename/path node3
+	ROS_INFO("Called for wrench");
+	getch();
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion1_audio.wav";
+    srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest);
+	ROS_INFO("Called for audio");
+	getch(); //set filename/path node4
+    // ROS_INFO("File names set. Ready to start recording motion.");
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_1/color/";
+    srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+	ROS_INFO("Called for color_frame_capture");
+	getch();
+	
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_1/depth/";
+    srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("Called for depth_frame_capture");
+	getch();
+
+    srvRequest.request.command.data ="start";
+	clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("Service calls executed, All nodes should be recording for motion 1.");
+	ros::Duration(10.0).sleep();
 
 	while (rotations > 0)
 	{	
 		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
-		joint_angles[0] -= radius;
-		joint_angles[2] += radius;
-		// joint_angles[5] += radius;
-		std_msgs::String point_2 = URScriptCommand(joint_angles, a, v);
-		command_pub.publish(point_2);
-		ros::Duration(0.5).sleep();
 		
-		joint_angles[1] -= radius;
-		joint_angles[2] += radius;
-		// joint_angles[5] -= radius;
-		std_msgs::String point_3 = URScriptCommand(joint_angles, a, v);
-		// command_pub.publish(point_3);
-		ros::Duration(0.5).sleep();
-
-		joint_angles[0] += radius;
-		joint_angles[2] -= radius;
-		// joint_angles[5] += radius;
-		std_msgs::String point_4 = URScriptCommand(joint_angles, a, v);
-		command_pub.publish(point_4);
-		ros::Duration(0.5).sleep();
-
-		joint_angles[1] += radius;
-		joint_angles[2] -= radius;
-		// joint_angles[5] -= radius;
-		std_msgs::String point_1 = URScriptCommand(joint_angles, a, v);
+		ROS_INFO_STREAM(point_1);
 		command_pub.publish(point_1);
-		ros::Duration(0.5).sleep();
+		ros::Duration(0.75).sleep();
+
+		ROS_INFO_STREAM(point_2);
+		command_pub.publish(point_2);
+		ros::Duration(0.75).sleep();
+
+		ROS_INFO_STREAM(point_3);
+		command_pub.publish(point_3);
+		ros::Duration(0.75).sleep();
+
+		ROS_INFO_STREAM(point_4);
+		command_pub.publish(point_4);
+		ros::Duration(0.75).sleep();
 
 		rotations--;
 	}
-	open_gripper();
 
+	ROS_INFO("Stopping the data recording node.");
+	srvRequest.request.command.data ="stop";
+	clientObj.call(srvRequest);
+
+	command_pub.publish(point_c);
+	// ros::Duration(10.0).sleep();
 }
+
+
+void ur5Behavior::stirringMotion_2()
+{
+	ROS_INFO("Motion 2");
+
+	double temp_joints_c[6];
+	int rotations = 5;
+	double a = 1.50;
+	double v = 1.50;
+	double radius = 1.0;
+
+	double x = 0.054;
+	double y = -0.058;
+	double z = 0.636;
+
+	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);	
+	double* joint_angles_c = inverseKinematic(pose_c, temp_joints_c);
+
+
+
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion2_joint_states.csv";
+    srvRequest.request.topic.data = "/joint_states";
+    clientObj.call(srvRequest); //set filename/path node1
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion2_gripper_joint_states.csv";
+    srvRequest.request.topic.data = "/gripper/joint_states";
+	clientObj.call(srvRequest); //set filename/path node2
+    
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion2_wrench.csv";
+    srvRequest.request.topic.data = "/wrench";
+    clientObj.call(srvRequest); //set filename/path node3
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion2_audio.wav";
+    srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_2/color/";
+    srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+	
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_2/depth/";
+    srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+
+
+    srvRequest.request.command.data ="start";
+	clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("Service calls executed, All nodes should be recording for motion 2.");
+	ros::Duration(10.0).sleep();
+
+	while (rotations > 0)
+	{	
+		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
+
+		joint_angles_c[5] += radius;
+		std_msgs::String point_2 = URScriptCommand(joint_angles_c, a, v);
+		command_pub.publish(point_2);
+		ros::Duration(0.75).sleep();
+		
+		joint_angles_c[5] -= radius;
+		point_2 = URScriptCommand(joint_angles_c, a, v);
+		command_pub.publish(point_2);
+		ros::Duration(0.75).sleep();
+
+		rotations--;
+	}
+
+	ROS_INFO("Stopping the data recording node.");
+	srvRequest.request.command.data ="stop";
+	clientObj.call(srvRequest);
+	// ros::Duration(10.0).sleep();
+}
+
+void ur5Behavior::stirringMotion_3()
+{
+	ROS_INFO("Motion 3");
+
+	double temp_joints_c[6];
+	double temp_joints_1[6];
+	double temp_joints_2[6];
+	double temp_joints_3[6];
+	double temp_joints_4[6];
+	int rotations = 5;
+	double a = 1.50;
+	double v = 1.50;
+	double radius = 0.02;
+	double radius1 = 1.00;
+	
+	geometry_msgs::Pose current_pose = group->getCurrentPose().pose;
+	double x = 0.054;
+	double y = -0.058;
+	double z = 0.636;
+	// X : 0.054, Y : -0.058, Z : 0.636
+
+	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);	
+	double* joint_angles_c = inverseKinematic(pose_c, temp_joints_c);
+
+	geometry_msgs::Pose pose_1 = getPoseFromCoord(x, y-radius, z);	
+	double* joint_angles_1 = inverseKinematic(pose_1, temp_joints_1);
+
+	geometry_msgs::Pose pose_2 = getPoseFromCoord(x+radius, y, z);	
+	double* joint_angles_2 = inverseKinematic(pose_2, temp_joints_2);
+	
+	geometry_msgs::Pose pose_3 = getPoseFromCoord(x, y+radius, z);	
+	double* joint_angles_3 = inverseKinematic(pose_3, temp_joints_3);
+
+	geometry_msgs::Pose pose_4 = getPoseFromCoord(x-radius, y, z);	
+	double* joint_angles_4 = inverseKinematic(pose_4, temp_joints_4);
+	
+
+
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion3_joint_states.csv";
+    srvRequest.request.topic.data = "/joint_states";
+    clientObj.call(srvRequest); //set filename/path node1
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion3_gripper_joint_states.csv";
+    srvRequest.request.topic.data = "/gripper/joint_states";
+	clientObj.call(srvRequest); //set filename/path node2
+    
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion3_wrench.csv";
+    srvRequest.request.topic.data = "/wrench";
+    clientObj.call(srvRequest); //set filename/path node3
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion3_audio.wav";
+    srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_3/color/";
+    srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+	
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_3/depth/";
+    srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+
+    srvRequest.request.command.data ="start";
+	clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("Service calls executed, All nodes should be recording for motion 3.");
+	ros::Duration(10.0).sleep();
+
+
+	while (rotations > 0)
+	{	
+		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
+		
+		joint_angles_1[5] += radius1;
+		std_msgs::String point_1 = URScriptCommand(joint_angles_1, a, v);
+		command_pub.publish(point_1);
+		joint_angles_1[5] -= radius1;
+		ros::Duration(1.5).sleep();
+
+		joint_angles_2[5] -= radius1;
+		std_msgs::String point_2 = URScriptCommand(joint_angles_2, a, v);
+		command_pub.publish(point_2);
+		joint_angles_2[5] += radius1;
+		ros::Duration(1.5).sleep();
+
+		joint_angles_3[5] += radius1;
+		std_msgs::String point_3 = URScriptCommand(joint_angles_3, a, v);
+		command_pub.publish(point_3);
+		joint_angles_3[5] -= radius1;
+		ros::Duration(1.5).sleep();
+
+		joint_angles_4[5] -= radius1;
+		std_msgs::String point_4 = URScriptCommand(joint_angles_4, a, v);
+		command_pub.publish(point_4);
+		joint_angles_4[5] += radius1;
+		ros::Duration(1.5).sleep();
+
+		rotations--;
+	}
+
+	ROS_INFO("Stopping the data recording node.");
+	srvRequest.request.command.data ="stop";
+	clientObj.call(srvRequest);
+
+	std_msgs::String point_c = URScriptCommand(joint_angles_c, a, v);
+	command_pub.publish(point_c);
+	// ros::Duration(10.0).sleep();
+}
+
+void ur5Behavior::stirringMotion_4()
+{
+	ROS_INFO("Motion 4");
+
+	double temp_joints_c[6];
+	double temp_joints_1[6];
+	double temp_joints_2[6];
+	double temp_joints_3[6];
+	double temp_joints_4[6];
+	int rotations = 5;
+	double a = 1.50;
+	double v = 1.50;
+	double radius = 0.02;
+
+	
+	geometry_msgs::Pose current_pose = group->getCurrentPose().pose;
+	double x = 0.054;
+	double y = -0.058;
+	double z = 0.636;
+	// X : 0.054, Y : -0.058, Z : 0.636
+
+	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);	
+	double* joint_angles_c = inverseKinematic(pose_c, temp_joints_c);
+
+	geometry_msgs::Pose pose_1 = getPoseFromCoord(x, y-radius, z);	
+	double* joint_angles_1 = inverseKinematic(pose_1, temp_joints_1);
+
+	geometry_msgs::Pose pose_2 = getPoseFromCoord(x+radius, y, z);	
+	double* joint_angles_2 = inverseKinematic(pose_2, temp_joints_2);
+	
+	geometry_msgs::Pose pose_3 = getPoseFromCoord(x, y+radius, z);	
+	double* joint_angles_3 = inverseKinematic(pose_3, temp_joints_3);
+
+	geometry_msgs::Pose pose_4 = getPoseFromCoord(x-radius, y, z);	
+	double* joint_angles_4 = inverseKinematic(pose_4, temp_joints_4);
+
+
+	std_msgs::String point_c = URScriptCommand(joint_angles_c, a, v);
+	std_msgs::String point_1 = URScriptCommand(joint_angles_1, a, v);
+	std_msgs::String point_2 = URScriptCommand(joint_angles_2, a, v);
+	std_msgs::String point_3 = URScriptCommand(joint_angles_3, a, v);
+	std_msgs::String point_4 = URScriptCommand(joint_angles_4, a, v);
+	
+
+
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion4_joint_states.csv";
+    srvRequest.request.topic.data = "/joint_states";
+    clientObj.call(srvRequest); //set filename/path node1
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion4_gripper_joint_states.csv";
+    srvRequest.request.topic.data = "/gripper/joint_states";
+	clientObj.call(srvRequest); //set filename/path node2
+    
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion4_wrench.csv";
+    srvRequest.request.topic.data = "/wrench";
+    clientObj.call(srvRequest); //set filename/path node3
+
+    srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion4_audio.wav";
+    srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_4/color/";
+    srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+	
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_4/depth/";
+    srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("File names set. Ready to start recording motion.");
+
+    srvRequest.request.command.data ="start";
+	clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("Service calls executed, All nodes should be recording for motion 4.");
+	ros::Duration(10.0).sleep();
+
+	while (rotations > 0)
+	{	
+		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
+		
+		// ROS_INFO_STREAM(point_1);
+		command_pub.publish(point_c);
+		ros::Duration(0.90).sleep();
+
+		command_pub.publish(point_1);
+		ros::Duration(0.90).sleep();
+
+		command_pub.publish(point_3);
+		ros::Duration(0.90).sleep();
+
+		command_pub.publish(point_c);
+		ros::Duration(0.90).sleep();
+
+		command_pub.publish(point_4);
+		ros::Duration(0.90).sleep();
+
+		command_pub.publish(point_2);
+		ros::Duration(0.90).sleep();
+
+		rotations--;
+	}
+
+	ROS_INFO("Stopping the data recording node.");
+	srvRequest.request.command.data ="stop";
+	clientObj.call(srvRequest);
+
+	command_pub.publish(point_c);
+	// ros::Duration(10.0).sleep();
+	open_gripper();
+}
+
+
+
+// void ur5Behavior::grabObject()
+// {
+// 	robotiq_85_msgs::GripperCmd msg;
+
+// 	double speed = 1.0;
+// 	double force = 1.0;
+// 	double position = 0.0;
+
+// 	msg.position = 0.0;
+// 	msg.speed = 1.0;
+// 	msg.force = 1.0;
+
+// 	int trigger = 99;
+// 	while (trigger != 27) // Esc Key
+// 	{
+// 		std::cout<<"\nController : ";
+// 		trigger = getch();
+// 		open_gripper();
+// 		getch();
+// 		std::cout<<trigger<<"\n";
+
+// 		switch (trigger)
+// 		{
+// 			case 105: // i - key
+// 						force += 1.0;
+// 						break;
+
+// 			case 107: // k - key
+// 						force -= 1.0;
+// 						break;
+
+// 			case 106: // j - key
+// 						speed -= 1.0;
+// 						break;
+
+// 			case 117: // u - key
+// 						speed += 1.0;
+// 						break;
+			
+// 			case 108: // l - key
+// 						position -= 0.01;
+// 						break;
+
+// 			case 111: // o - key
+// 						position += 0.01;
+// 						break;
+// 		}
+
+// 		std::cout<<"Speed : "<<speed<<", Force : "<<force<<", Position : "<<position<<"\n\n";
+// 		msg.speed = speed;
+// 		msg.force = force;
+// 		msg.position = position;
+// 		gripper_pub.publish(msg);
+// 	}
+// }
 
 
 int main(int argc, char **argv)
@@ -730,24 +1269,20 @@ int main(int argc, char **argv)
 	spinner.start();
 
 	ur5Behavior Obj;
-	Obj.init_pos();
-	// Obj.stirringMotion();
+	// Obj.close_gripper();
 	// Obj.cartesianControl();
-	Obj.shakingMotion();
-
-	// ros::Duration(2).sleep();
-	// double temp_joints[6];
-	// geometry_msgs::Pose pose = Obj.getPoseFromCoord(-0.421, 0.443, Obj.Z_coord);
-	// double* joint_angles = Obj.inverseKinematic(pose, temp_joints);
-	// ROS_INFO_STREAM(joint_angles[0]);
-	// std_msgs::String command = Obj.URScriptCommand(joint_angles); 
-	// Obj.command_pub.publish(command);
-	// Obj.detectObjects();
-	// Obj.motionPlanner();
-	// Obj.move_arm();
-	// Obj.init_pos();
-	// Obj.cartesianControl();
-
+	Obj.stirringMotion_1();
+	ROS_INFO("Time out between motions");
+	ros::Duration(10.0).sleep();
+	Obj.stirringMotion_2();
+	ROS_INFO("Time out between motions");
+	ros::Duration(10.0).sleep();
+	Obj.stirringMotion_3();
+	ROS_INFO("Time out between motions");
+	ros::Duration(10.0).sleep();
+	Obj.stirringMotion_4();
+	ROS_INFO("Time out between motions");
+	ros::Duration(10.0).sleep();
 	spinner.stop();
 
 	return 0;

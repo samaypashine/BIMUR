@@ -19,6 +19,20 @@
    <xacro:arg name="safety_pos_margin" default="0.15"/>
    <xacro:arg name="safety_k_position" default="20"/>
 
+
+<!-- shoulder_pan_lower_limit="-1.23"
+shoulder_pan_upper_limit="-0.209"
+shoulder_lift_lower_limit="-2.199"
+shoulder_lift_upper_limit="-0.1919"
+elbow_joint_lower_limit="0.977"
+elbow_joint_upper_limit="2.4085"
+wrist_1_lower_limit="-3.14" 
+wrist_1_upper_limit="3.14"
+wrist_2_lower_limit="-3.14"
+wrist_2_upper_limit="3.14"
+wrist_3_lower_limit="-3.14"
+wrist_3_upper_limit="3.14" -->
+   
    <!-- arm -->
    <xacro:ur_robot
      prefix=""

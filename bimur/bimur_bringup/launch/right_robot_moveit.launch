@@ -8,6 +8,7 @@
   <!-- <arg name="real_robot" default="true"/> -->
   <arg name="gripper_test" default="false"/>
   <arg name="debug" default="false"/>
+  <arg name="limited" default="false"/>
   <arg name="robot_ip" doc="IP address by which the robot can be reached."/>
   <arg name="kinematics_config" default="$(find bimur_description)/config/ur5_melodic_kinematic.yaml" doc="Kinematics config file used for calibration correction. This will be used to verify the robot's calibration is matching the robot_description."/>
   <arg name="robot_description" default="$(find bimur_description)/launch/load_ur5.launch" doc="Robot description launch file."/>
@@ -16,6 +17,7 @@
   <!-- Load robot URDF -->
   <include file="$(find ur_robot_driver)/launch/ur5_bringup.launch">
     <arg name="debug" value="$(arg debug)"/>
+    <arg name="limited" value="$(arg limited)"/>
     <arg name="robot_ip" value="$(arg robot_ip)"/>
     <arg name="kinematics_config" value="$(arg kinematics_config)"/>
     <arg name="robot_description_file" value="$(arg robot_description)"/>
@@ -49,5 +51,7 @@
   <include ns="move_group" file="$(find bimur_ur5_moveit_config)/launch/planning_pipeline.launch.xml">
     <arg name="pipeline" value="ompl" />
   </include>
+  <!-- <include ns="move_group" file="$(find moveit_resources_fanuc_moveit_config)/launch/pilz_industrial_motion_planner_planning_pipeline.launch.xml">
+  </include> -->
 
 </launch>

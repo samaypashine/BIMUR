@@ -1,0 +1,28 @@
+<launch>
+    <arg name="numTopics" doc= "The number of instances of genericListener node to launch"/>
+    <arg name="topicName1" doc= "The name of the topic to be listened to/recorded by the genericListener1" default="foo"/>
+    <arg name="topicName2" doc= "The name of the topic to be listened to/recorded by the genericListener2" default="foo"/>
+    <arg name="topicName3" doc= "The name of the topic to be listened to/recorded by the genericListener3" default="foo"/>
+    <arg name="topicName4" doc= "The name of the topic to be listened to/recorded by the genericListener4" default="foo"/>
+    <arg name="topicName5" doc= "The name of the topic to be listened to/recorded by the genericListener5" default="foo"/>
+    <arg name="topicName6" doc= "The name of the topic to be listened to/recorded by the genericListener6" default="foo"/>
+    <arg name="topicName7" doc= "The name of the topic to be listened to/recorded by the genericListener7" default="foo"/>
+    <arg name="topicName8" doc= "The name of the topic to be listened to/recorded by the genericListener8" default="foo"/>
+    <arg name="topicName9" doc= "The name of the topic to be listened to/recorded by the genericListener9" default="foo"/>
+    <arg name="topicName10" doc= "The name of the topic to be listened to/recorded by the genericListener10" default="foo"/>
+
+    <node name ="recordingServiceServer" pkg="joint_recorder" type="recorderServer" />
+    <node name ="audioRecorderNode" pkg="joint_recorder" type="audioRecorderNode" />
+    <node name ="colorframeCaptureNode" pkg="joint_recorder" type="colorframeCaptureNode" />
+    <node name ="depthframeCaptureNode" pkg="joint_recorder" type="depthframeCaptureNode" />
+    <node if="$(eval arg('numTopics')>=1)" name="data_recording_node1" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName1)" />
+    <node if="$(eval arg('numTopics')>=2)" name="data_recording_node2" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName2)" />
+    <node if="$(eval arg('numTopics')>=3)" name="data_recording_node3" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName3)" />
+    <node if="$(eval arg('numTopics')>=4)" name="data_recording_node4" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName4)" />
+    <node if="$(eval arg('numTopics')>=5)" name="data_recording_node5" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName5)" />
+    <node if="$(eval arg('numTopics')>=6)" name="data_recording_node6" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName6)" />
+    <node if="$(eval arg('numTopics')>=7)" name="data_recording_node7" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName7)" />
+    <node if="$(eval arg('numTopics')>=8)" name="data_recording_node8" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName8)" />
+    <node if="$(eval arg('numTopics')>=9)" name="data_recording_node9" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName9)" />
+    <node if="$(eval arg('numTopics')>=10)" name="data_recording_node10" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName10)" />
+</launch>

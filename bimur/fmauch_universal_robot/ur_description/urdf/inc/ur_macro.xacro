@@ -75,6 +75,19 @@
     <!-- Add URDF transmission elements (for ros_control) -->
     <xacro:ur_arm_transmission prefix="${prefix}" hw_interface="${transmission_hw_interface}" />
 
+    <!-- <xacro:arg name="shoulder_pan_lower_limit" value="-1.23">
+    <xacro:arg name="shoulder_pan_upper_limit" value="-0.209">
+    <xacro:arg name="shoulder_lift_lower_limit" value="-2.199">
+    <xacro:arg name="shoulder_lift_upper_limit" value="-0.1919">
+    <xacro:arg name="elbow_joint_lower_limit" value="0.977">
+    <xacro:arg name="elbow_joint_upper_limit" value="2.4085">
+    <xacro:arg name="wrist_1_lower_limit" value="-3.14"> 
+    <xacro:arg name="wrist_1_upper_limit" value="3.14">
+    <xacro:arg name="wrist_2_lower_limit" value="-3.14">
+    <xacro:arg name="wrist_2_upper_limit" value="3.14">
+    <xacro:arg name="wrist_3_lower_limit" value="-3.14">
+    <xacro:arg name="wrist_3_upper_limit" value="3.14"> -->
+
     <!-- links: main serial chain -->
     <link name="${prefix}base_link"/>
     <link name="${prefix}base_link_inertia">
