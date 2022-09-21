@@ -21,7 +21,7 @@
 #include <librealsense2/rs.hpp>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 #include<stdlib.h>
 #include<string.h>
@@ -53,7 +53,7 @@ void frame_topic1_callback(const sensor_msgs::ImageConstPtr& msg)
         std::string png_file = folderName + "image-" + std::to_string(num1) + ".jpg";  
         cv::imwrite(png_file, cv_ptr->image);
         
-        std::string command = "python3 /home/samay/catkin_ws/src/digit/src/recordTouchData.py --num " + std::to_string(num2);
+        std::string command = "python3 /home/mulip-admin/bimur_ws/src/UR5-ros-melodic/digit/src/recordTouchData.py --num " + std::to_string(num2);
         system(command.c_str());
 
         num1++;

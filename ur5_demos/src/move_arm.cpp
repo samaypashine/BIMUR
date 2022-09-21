@@ -1,6 +1,6 @@
 /**
  * @file move_arm.cpp
- * @author Willy, Samay
+ * @author Samay
  * @brief 
  * @version 1.0
  * @date 2022-06-02
@@ -804,28 +804,28 @@ void ur5Behavior::stirringMotion_1()
 
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion1_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/joint_states_data/motion1_joint_states.csv";
     srvRequest.request.topic.data = "/joint_states";
     clientObj.call(srvRequest); //set filename/path node1
 	ROS_INFO("Called for joint_states");
 	getch();
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion1_gripper_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion1_gripper_joint_states.csv";
     srvRequest.request.topic.data = "/gripper/joint_states";
 	clientObj.call(srvRequest); //set filename/path node2
     ROS_INFO("Called for gripper_joint_states");
 	getch();
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion1_wrench.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/wrench_data/motion1_wrench.csv";
     srvRequest.request.topic.data = "/wrench";
     clientObj.call(srvRequest); //set filename/path node3
 	ROS_INFO("Called for wrench");
 	getch();
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion1_audio.wav";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/audio_data/motion1_audio.wav";
     srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest);
 	ROS_INFO("Called for audio");
@@ -833,14 +833,14 @@ void ur5Behavior::stirringMotion_1()
     // ROS_INFO("File names set. Ready to start recording motion.");
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_1/color/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_1/color/";
     srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
 	ROS_INFO("Called for color_frame_capture");
 	getch();
 	
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_1/depth/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_1/depth/";
     srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("Called for depth_frame_capture");
@@ -904,34 +904,34 @@ void ur5Behavior::stirringMotion_2()
 
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion2_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/joint_states_data/motion2_joint_states.csv";
     srvRequest.request.topic.data = "/joint_states";
     clientObj.call(srvRequest); //set filename/path node1
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion2_gripper_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion2_gripper_joint_states.csv";
     srvRequest.request.topic.data = "/gripper/joint_states";
 	clientObj.call(srvRequest); //set filename/path node2
     
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion2_wrench.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/wrench_data/motion2_wrench.csv";
     srvRequest.request.topic.data = "/wrench";
     clientObj.call(srvRequest); //set filename/path node3
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion2_audio.wav";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/audio_data/motion2_audio.wav";
     srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_2/color/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_2/color/";
     srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
 	
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_2/depth/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_2/depth/";
     srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
@@ -1005,34 +1005,34 @@ void ur5Behavior::stirringMotion_3()
 
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion3_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/joint_states_data/motion3_joint_states.csv";
     srvRequest.request.topic.data = "/joint_states";
     clientObj.call(srvRequest); //set filename/path node1
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion3_gripper_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion3_gripper_joint_states.csv";
     srvRequest.request.topic.data = "/gripper/joint_states";
 	clientObj.call(srvRequest); //set filename/path node2
     
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion3_wrench.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/wrench_data/motion3_wrench.csv";
     srvRequest.request.topic.data = "/wrench";
     clientObj.call(srvRequest); //set filename/path node3
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion3_audio.wav";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/audio_data/motion3_audio.wav";
     srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_3/color/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_3/color/";
     srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
 	
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_3/depth/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_3/depth/";
     srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
@@ -1130,34 +1130,34 @@ void ur5Behavior::stirringMotion_4()
 
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/joint_states_data/motion4_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/joint_states_data/motion4_joint_states.csv";
     srvRequest.request.topic.data = "/joint_states";
     clientObj.call(srvRequest); //set filename/path node1
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion4_gripper_joint_states.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/gripper_joint_states_data/motion4_gripper_joint_states.csv";
     srvRequest.request.topic.data = "/gripper/joint_states";
 	clientObj.call(srvRequest); //set filename/path node2
     
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/wrench_data/motion4_wrench.csv";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/wrench_data/motion4_wrench.csv";
     srvRequest.request.topic.data = "/wrench";
     clientObj.call(srvRequest); //set filename/path node3
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/audio_data/motion4_audio.wav";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/audio_data/motion4_audio.wav";
     srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_4/color/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_4/color/";
     srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");
 	
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = "/media/samay/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_4/depth/";
+    srvRequest.request.fileName.data = "/media/mulip-admin/Samsung 870 QVO/dataset_liquid/realsense_frames_data/motion_4/depth/";
     srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("File names set. Ready to start recording motion.");

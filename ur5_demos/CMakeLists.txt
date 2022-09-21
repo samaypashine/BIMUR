@@ -148,6 +148,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(move_arm src/move_arm.cpp)
 target_link_libraries(move_arm ${catkin_LIBRARIES})
+add_dependencies(move_arm joint_recorder_gencpp)
 
 
 ## Rename C++ executable without prefix

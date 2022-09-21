@@ -18,6 +18,6 @@ digit.set_resolution(qvga_res)
 fps_30 = Digit.STREAMS["QVGA"]["fps"]["30fps"]
 digit.set_fps(fps_30)
 
-frame = digit.save_frame("/home/samay/Desktop/dataset_liquid/touch_data/{}.jpg".format(args.num))
+frame = digit.save_frame("/media/mulip-admin/Samsung 870 QVO/dataset_liquid/touch_data/{}.jpg".format(args.num))
 print("Frame Saved at the location by name : {}.jpg".format(args.num))
 

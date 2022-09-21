@@ -1,2 +1,0 @@
-
-mkdir -p audio_data gripper_joint_states_data joint_states_data realsense_frames_data/motion_1/color realsense_frames_data/motion_2/color realsense_frames_data/motion_3/color realsense_frames_data/motion_4/color realsense_frames_data/motion_1/depth realsense_frames_data/motion_2/depth realsense_frames_data/motion_3/depth realsense_frames_data/motion_4/depth touch_data wrench_data

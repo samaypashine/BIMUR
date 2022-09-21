@@ -21,7 +21,7 @@
 #include <librealsense2/rs.hpp>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
+#include "stb/stb_image_write.h"
 
 #include<stdlib.h>
 #include<string.h>
