@@ -127,7 +127,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   ${ALSA_INCLUDE_DIRS}
   # ${realsense2_INCLUDE_DIR}
-  "/home/samay/librealsense/third-party/"
+  "/home/pc1/librealsense/third-party/"
   "/catkin_ws/src/ros_msg_parser/include/ros_msg_parser"
   "/usr/include/alsa"
 )
@@ -233,10 +233,10 @@ target_link_libraries (audioRecorderNode ${catkin_LIBRARIES} ${ALSA_LIBRARIES})
 add_dependencies(audioRecorderNode joint_recorder_gencpp)
 
 add_executable(depthframeCaptureNode src/depthframeCaptureNode.cpp)
-target_link_libraries (depthframeCaptureNode ${catkin_LIBRARIES} -lrealsense2)
+target_link_libraries (depthframeCaptureNode ${catkin_LIBRARIES} -I/opt/ros/melodic/include)
 add_dependencies(depthframeCaptureNode joint_recorder_gencpp)
 
 add_executable(colorframeCaptureNode src/colorframeCaptureNode.cpp)
-target_link_libraries (colorframeCaptureNode ${catkin_LIBRARIES} -lrealsense2)
+target_link_libraries (colorframeCaptureNode ${catkin_LIBRARIES} -I/opt/ros/melodic/include)
 add_dependencies(colorframeCaptureNode joint_recorder_gencpp)
 

@@ -1,0 +1,13 @@
+
+```
+sudo chmod 777 /dev/ttyUSB0
+
+roslaunch bimur_bringup right_robot_moveit.launch robot_ip:=172.22.22.2
+
+roslaunch realsense2_camera rs_camera.launch filters:=pointcloud
+
+roslaunch joint_recorder recordingService.launch numTopics:=3 topicName1:=/joint_states topicName2:=/gripper/joint_states topicName3:=/wrench
+
+rosrun ur5_demos move_arm
+```
+
