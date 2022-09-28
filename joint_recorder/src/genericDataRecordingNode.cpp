@@ -38,7 +38,7 @@ void topicCallback(const RosMsgParser::ShapeShifter& msg,
         //const std::string& value = it.second;
         
         file << key << ","; //saving only the "key" variable on first row, which is the name of each field
-        ROS_INFO("A %s", key.c_str());
+        // ROS_INFO("A %s", key.c_str());
       }
 
       for (auto it : deserialized_msg->renamed_vals) //renamed_vals => values that are NOT strings
@@ -46,17 +46,8 @@ void topicCallback(const RosMsgParser::ShapeShifter& msg,
         const std::string& key = it.first;
         //double value = it.second;
         file << key << ","; //saving only the "key" variable on first row, which is the name of each field
-        ROS_INFO("B %s", key.c_str());
+        // ROS_INFO("B %s", key.c_str());
       }
-
-      // for (auto it : deserialized_msg->flat_msg.name) // flat_msg.name => values that are/can be treated as/ strings
-      // {
-      //   // const std::string& key = it.second.toStdString();
-      //   const std::string& key = it.second;
-        
-      //   // file << key << ","; //saving only the "key" variable on first row, which is the name of each field
-      //   ROS_INFO("C %s", key.c_str());
-      // }
 
       file << "\n";
       isFirstRun = false;
@@ -75,10 +66,19 @@ void topicCallback(const RosMsgParser::ShapeShifter& msg,
 
     for (auto it : deserialized_msg->renamed_vals) 
     {
-      //const std::string& key = it.first;
+      const std::string& key = it.first;
       double value = it.second;
       //std::cout << key << " = " << value << std::endl;
-      file << value << ",";
+
+      const std::string& time_key = "/header/stamp";
+      if(key.find(time_key) != std::string::npos) {
+        ros::Time value = ros::Time::now();
+        file << value << ",";
+      }
+      else {
+        file << value << ",";
+      }
+      
       // ROS_INFO(std::to_string(value).c_str());
     }
 

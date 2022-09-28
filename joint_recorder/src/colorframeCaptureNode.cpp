@@ -52,7 +52,7 @@ void frame_topic1_callback(const sensor_msgs::ImageConstPtr& msg)
 
         ros::Time timestamp = msg->header.stamp;
 
-        std::string png_file = folderName + std::to_string(timestamp.sec) + "." + std::to_string(timestamp.nsec) + ".jpg";  
+        std::string png_file = folderName + std::to_string(timestamp.sec) + "." + std::to_string(timestamp.nsec) + ".jpg";
         cv::imwrite(png_file, cv_ptr->image);
         
         // std::string command = "python3 /home/pc1/bimur_ws/src/UR5-ros-melodic/digit/src/recordTouchData.py --num " + std::to_string(num2);
