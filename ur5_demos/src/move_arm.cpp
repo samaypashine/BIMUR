@@ -439,7 +439,7 @@ double* ur5Behavior::generatePoints(double x, double y, double z, double radius,
 
 	geometry_msgs::Pose poses[numPoints + 1];
 	
-	double temp_joints[6];
+	double temp_joints[numPoints + 1][6];
 	double* joint_angles[numPoints + 1];
 
 	for(int i = 0, j = 0; i < numPoints; i++, j++)
@@ -450,19 +450,30 @@ double* ur5Behavior::generatePoints(double x, double y, double z, double radius,
 		if (j == 0)
 		{
 			poses[j] = getPoseFromCoord(x_centre, y_centre, z);
-			joint_angles[j] = inverseKinematic(poses[j], temp_joints);
+			joint_angles[j] = inverseKinematic(poses[j], temp_joints[j]);
 			j++;	
 		}
 
 		poses[j] = getPoseFromCoord(X[i], Y[i], z);
-		joint_angles[j] = inverseKinematic(poses[j], temp_joints);
+		joint_angles[j] = inverseKinematic(poses[j], temp_joints[j]);
 	}
 
-	ROS_INFO_STREAM(poses[0]);
-	ROS_INFO_STREAM(poses[1]);
-	ROS_INFO_STREAM(poses[2]);
-	ROS_INFO_STREAM(poses[3]);
-	ROS_INFO_STREAM(poses[4]);
+	// std::cout<<"X : "<<x_centre<<", Y : "<<y_centre<<"\n";
+	// ROS_INFO_STREAM(inverseKinematic(poses[0], temp_joints[0])[0]);
+	ROS_INFO_STREAM(*joint_angles[0]);
+
+	// std::cout<<"X : "<<X[0]<<", Y : "<<Y[0]<<"\n";
+	// ROS_INFO_STREAM(*joint_angles[1]);
+
+	// std::cout<<"X : "<<X[1]<<", Y : "<<Y[1]<<"\n";
+	// ROS_INFO_STREAM(*joint_angles[2]);
+
+	// std::cout<<"X : "<<X[2]<<", Y : "<<Y[2]<<"\n";
+	// ROS_INFO_STREAM(*joint_angles[3]);
+
+	// std::cout<<"X : "<<X[3]<<", Y : "<<Y[3]<<"\n";
+	// ROS_INFO_STREAM(*joint_angles[4]);
+	getch();
 
 	return *joint_angles;
 }
@@ -518,14 +529,25 @@ void ur5Behavior::stirringMotion_1(std::string base_path, double a , double v, d
 
 
 	double* joint_angles = generatePoints(x, y, z, radius, numPoints);
+	
+	// ROS_INFO_STREAM(joint_angles);
+	// getch();
+	// ROS_INFO_STREAM(joint_angles[0]);
+	// getch();
+	// ROS_INFO_STREAM(joint_angles[1]);
+
 	std_msgs::String points[numPoints + 1];
 	for (int i = 0; i <= numPoints; i++)
 	{
 		points[i] = URScriptCommand(joint_angles, a, v);
 	}
 
-	ROS_INFO_STREAM(points);
+	ROS_INFO_STREAM(points[0]);
+	ROS_INFO_STREAM(points[1]);
+	ROS_INFO_STREAM(points[2]);
+	ROS_INFO_STREAM(points[3]);
 
+	getch();
 
 	// std_msgs::String point_c = URScriptCommand(joint_angles_c, a, v);
 	// std_msgs::String point_1 = URScriptCommand(joint_angles_1, a, v);
@@ -572,7 +594,7 @@ void ur5Behavior::stirringMotion_1(std::string base_path, double a , double v, d
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	command_pub.publish(points[0]);
+	// command_pub.publish(points[0]);
 	// ros::Duration(10.0).sleep();
 }
 
@@ -781,6 +803,7 @@ int main(int argc, char **argv)
 
 	ur5Behavior Obj;
 
+	Obj.stirringMotion_1("/home/pc1/Downloads/Liquid_Dataset/motion-1_fast", 1.5, 1.5, 0.01, 5, 0.75);
 	// Obj.stirringMotion_1("/home/pc1/Downloads/Liquid_Dataset/motion-1_fast", 1.5, 1.5, 0.02, 5, 0.75);
 	// ROS_INFO("Time out between motions");
 	// ros::Duration(20.0).sleep();
