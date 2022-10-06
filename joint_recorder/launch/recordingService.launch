@@ -15,6 +15,7 @@
     <node name ="audioRecorderNode" pkg="joint_recorder" type="audioRecorderNode"/>
     <node name ="colorframeCaptureNode" pkg="joint_recorder" type="colorframeCaptureNode"/>
     <node name ="depthframeCaptureNode" pkg="joint_recorder" type="depthframeCaptureNode"/>
+    <!-- <node name ="touch_frame_capture_node" pkg="joint_recorder" type="touch_frame_capture_node.py"/> -->
     <node if="$(eval arg('numTopics')>=1)" name="data_recording_node1" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName1)" output="screen"/>
     <node if="$(eval arg('numTopics')>=2)" name="data_recording_node2" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName2)" output="screen"/>
     <node if="$(eval arg('numTopics')>=3)" name="data_recording_node3" pkg="joint_recorder" type="genericDataRecordingNode" args="$(arg topicName3)" output="screen"/>
