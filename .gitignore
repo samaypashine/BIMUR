@@ -136,3 +136,6 @@ dmypy.json
 
 # folders
 results/
+
+digit/src/record_info.json
+

@@ -330,6 +330,12 @@ void ur5Behavior::initialize_folders(std::string folderName)
     ROS_INFO("Called for depth_frame_capture");
 	// getch();
 
+	srvRequest.request.command.data = "set_file_name";
+    srvRequest.request.fileName.data = folderName + "touch/";
+    srvRequest.request.topic.data = "touch_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
+    clientObj.call(srvRequest); //set filename/path node4
+    ROS_INFO("Called for touch_frame_capture");
+
     srvRequest.request.command.data ="start";
 	clientObj.call(srvRequest);
 }
@@ -658,16 +664,16 @@ int main(int argc, char **argv)
 
 	ur5Behavior Obj;
 
-	// Obj.stirringMotion_1("/home/pc1/Downloads/Liquid_Dataset/motion-1/", 1.5, 1.5, 0.025, 5, 10, 0.275);
+	Obj.stirringMotion_1("/home/pc1/Downloads/Liquid_Dataset/motion-1/", 1.5, 1.5, 0.025, 5, 10, 0.275);
 	// ROS_INFO("Time out between motions");
 	// ros::Duration(20.0).sleep();
-	// Obj.stirringMotion_2("/home/pc1/Downloads/Liquid_Dataset/motion-2/", 1.5, 1.5, 1.0, 5, 0.75);
+	Obj.stirringMotion_2("/home/pc1/Downloads/Liquid_Dataset/motion-2/", 1.5, 1.5, 1.0, 5, 0.75);
 	// ROS_INFO("Time out between motions");
 	// ros::Duration(20.0).sleep();
-	// Obj.stirringMotion_3("/home/pc1/Downloads/Liquid_Dataset/motion-3/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
+	Obj.stirringMotion_3("/home/pc1/Downloads/Liquid_Dataset/motion-3/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
 	// ROS_INFO("Time out between motions");
 	// ros::Duration(30.0).sleep();
-	Obj.stirringMotion_4("/home/pc1/Downloads/Liquid_Dataset/motion-4/", 1.5, 1.5, 0.02, 5, 10, 0.90);
+	// Obj.stirringMotion_4("/home/pc1/Downloads/Liquid_Dataset/motion-4/", 1.5, 1.5, 0.02, 5, 10, 0.90);
 	// ROS_INFO("Time out between motions");
 	// ros::Duration(20.0).sleep();
 	spinner.stop();
