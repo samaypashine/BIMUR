@@ -30,3 +30,4 @@ sudo apt-get install ros-melodic-speed-scaling-interface
 sudo apt-get install ros-melodic-speed-scaling-state-controller
 sudo apt-get install ros-melodic-ur-msgs
 sudo apt-get install ros-melodic-pass-through-controllers
+sudo apt-get install ros-melodic-audio-common

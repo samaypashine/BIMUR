@@ -8,10 +8,13 @@ roslaunch realsense2_camera rs_camera.launch filters:=pointcloud
 
 roslaunch joint_recorder recordingService.launch numTopics:=3 topicName1:=/joint_states topicName2:=/gripper/joint_states topicName3:=/wrench
 
+cd /home/pc1/bimur_ws/src/UR5-ros-melodic/digit/src/
+python3 recordTouchData_socket.py
+
+roslaunch respeaker_ros respeaker.launch
+
 rosrun ur5_demos move_arm
 
-cd src/UR5-ros-melodic/digit/src/
-python3 recordTouchData_socket.py
 
 ```
 

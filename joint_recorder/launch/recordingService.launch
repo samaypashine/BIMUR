@@ -12,7 +12,8 @@
     <arg name="topicName10" doc= "The name of the topic to be listened to/recorded by the genericListener10" default="foo"/>
 
     <node name ="recordingServiceServer" pkg="joint_recorder" type="recorderServer"/>
-    <node name ="audioRecorderNode" pkg="joint_recorder" type="audioRecorderNode"/>
+    <!-- <node name ="audioRecorderNode" pkg="joint_recorder" type="audioRecorderNode"/> -->
+    <node name ="audio_capture_node" pkg="joint_recorder" type="audio_capture_node.py" output="screen"/>
     <node name ="colorframeCaptureNode" pkg="joint_recorder" type="colorframeCaptureNode"/>
     <node name ="depthframeCaptureNode" pkg="joint_recorder" type="depthframeCaptureNode"/>
     <node name ="touch_frame_capture_node" pkg="joint_recorder" type="touch_frame_capture_node.py" output="screen"/>
