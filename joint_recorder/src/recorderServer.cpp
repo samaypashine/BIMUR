@@ -8,8 +8,7 @@
 
 ros::Publisher controlPub;
 
-bool recordingService(joint_recorder::recorderSrv::Request &req, joint_recorder::recorderSrv::Response &res)
-{    
+bool recordingService(joint_recorder::recorderSrv::Request &req, joint_recorder::recorderSrv::Response &res) {    
     ros::NodeHandle n;
     ros::Publisher controlPub = n.advertise<joint_recorder::recorderMsg>("recording_control_topic",10);
     joint_recorder::recorderMsg msg;
@@ -23,9 +22,7 @@ bool recordingService(joint_recorder::recorderSrv::Request &req, joint_recorder:
     return true;
 }
 
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
   ros::init(argc, argv, "haptic_record_server");
   ros::NodeHandle n;
   ros::Publisher controlPub = n.advertise<joint_recorder::recorderMsg>("recording_control_topic",10);
@@ -33,8 +30,7 @@ int main(int argc, char **argv)
   ros::ServiceServer dataRecordingService = n.advertiseService("data_recording_service", recordingService);
   // ROS_ERROR("Data Recording Server: Ready to receive commands");
 
-  while(ros::ok())
-  {
+  while (ros::ok()) {
     ros::spin();
   }
 

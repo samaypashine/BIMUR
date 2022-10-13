@@ -1,33 +1,33 @@
-sudo apt-get install ros-melodic-catkin-virtualenv
-sudo apt-get install ros-melodic-control-toolbox
-sudo apt-get install ros-melodic-controller-interface
-sudo apt-get install ros-melodic-controller-manager-msgs
-sudo apt-get install ros-melodic-controller-manager
-sudo apt-get install ros-melodic-effort-controllers
-sudo apt-get install ros-melodic-force-torque-sensor-controller
-sudo apt-get install ros-melodic-gazebo-ros-control
-sudo apt-get install ros-melodic-industrial-robot-status-interface
-sudo apt-get install ros-melodic-joint-state-controller
-sudo apt-get install ros-melodic-joint-state-publisher-gui
-sudo apt-get install ros-melodic-joint-trajectory-controller
-sudo apt-get install ros-melodic-moveit
-sudo apt-get install ros-melodic-moveit-core
-sudo apt-get install ros-melodic-moveit-kinematics
-sudo apt-get install ros-melodic-moveit-ros-visualization
-sudo apt-get install ros-melodic-position-controllers
-sudo apt-get install ros-melodic-rqt-joint-trajectory-controller
-sudo apt-get install ros-melodic-socketcan-interface
-sudo apt-get install ros-melodic-soem
-sudo apt-get install ros-melodic-speech-recognition-msgs
-sudo apt-get install ros-melodic-ur-client-library
-sudo apt-get install ros-melodic-velocity-controllers
-sudo apt-get install libasound2 libasound2-dev
-sudo apt-get install ros-melodic-ddynamic-reconfigure
-sudo apt-get install ros-melodic-realsense2-camera
-sudo apt-get install ros-melodic-scaled-joint-trajectory-controller
-sudo apt-get install ros-melodic-moveit-visual-tools
-sudo apt-get install ros-melodic-speed-scaling-interface
-sudo apt-get install ros-melodic-speed-scaling-state-controller
-sudo apt-get install ros-melodic-ur-msgs
-sudo apt-get install ros-melodic-pass-through-controllers
-sudo apt-get install ros-melodic-audio-common
+sudo apt-get install ros-melodic-catkin-virtualenv -y
+sudo apt-get install ros-melodic-control-toolbox -y
+sudo apt-get install ros-melodic-controller-interface -y
+sudo apt-get install ros-melodic-controller-manager-msgs -y
+sudo apt-get install ros-melodic-controller-manager -y
+sudo apt-get install ros-melodic-effort-controllers -y
+sudo apt-get install ros-melodic-force-torque-sensor-controller -y
+sudo apt-get install ros-melodic-gazebo-ros-control -y
+sudo apt-get install ros-melodic-industrial-robot-status-interface -y
+sudo apt-get install ros-melodic-joint-state-controller -y
+sudo apt-get install ros-melodic-joint-state-publisher-gui -y
+sudo apt-get install ros-melodic-joint-trajectory-controller -y
+sudo apt-get install ros-melodic-moveit -y
+sudo apt-get install ros-melodic-moveit-core -y
+sudo apt-get install ros-melodic-moveit-kinematics -y
+sudo apt-get install ros-melodic-moveit-ros-visualization -y
+sudo apt-get install ros-melodic-position-controllers -y
+sudo apt-get install ros-melodic-rqt-joint-trajectory-controller -y
+sudo apt-get install ros-melodic-socketcan-interface -y
+sudo apt-get install ros-melodic-soem -y
+sudo apt-get install ros-melodic-speech-recognition-msgs -y
+sudo apt-get install ros-melodic-ur-client-library -y
+sudo apt-get install ros-melodic-velocity-controllers -y
+sudo apt-get install libasound2 libasound2-dev -y
+sudo apt-get install ros-melodic-ddynamic-reconfigure -y
+sudo apt-get install ros-melodic-realsense2-camera -y
+sudo apt-get install ros-melodic-scaled-joint-trajectory-controller -y
+sudo apt-get install ros-melodic-moveit-visual-tools -y
+sudo apt-get install ros-melodic-speed-scaling-interface -y
+sudo apt-get install ros-melodic-speed-scaling-state-controller -y
+sudo apt-get install ros-melodic-ur-msgs -y
+sudo apt-get install ros-melodic-pass-through-controllers -y
+sudo apt-get install ros-melodic-audio-common -y

@@ -1,6 +1,6 @@
 /**
- * @file move_arm.cpp
- * @author Samay
+ * @file tool_behaviors.cpp
+ * @author Samay, Gyan
  * @brief 
  * @version 1.0
  * @date 2022-06-02
@@ -8,6 +8,7 @@
  * @copyright Copyright (c) 2022
  * 
  */
+
 #include <ros/ros.h>
 
 #include "joint_recorder/recorderMsg.h"
@@ -15,7 +16,6 @@
 
 #include <signal.h>
 #include <iostream>
-
 
 #include <random>
 #include <vector>
@@ -36,7 +36,6 @@
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
 
-
 #include <pcl/conversions.h>
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -56,11 +55,9 @@
 #include <pcl/segmentation/sac_segmentation.h>
 #include <pcl/segmentation/extract_clusters.h>
 
-
 #include <bimur_robot_vision/TabletopPerception.h>
 #include <actionlib/client/simple_action_client.h>
 #include <control_msgs/FollowJointTrajectoryAction.h>
-
 
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/DisplayRobotState.h>
@@ -81,8 +78,7 @@
  */
 
 
-class ur5Behavior
-{
+class ur5Behavior {
 	public:
 
 	ros::NodeHandle n;
@@ -118,29 +114,27 @@ class ur5Behavior
 	// pcl::PointCloud<pcl::PointXYZ> detectObjects();
 	// geometry_msgs::Pose getPoseFromObject();
 	geometry_msgs::Pose getPoseFromCoord(double, double, double);
-	// double* inverseKinematic(geometry_msgs::Pose, double [], int);
-	double* inverseKinematic(geometry_msgs::Pose, int); // GT
+	double* inverseKinematic(geometry_msgs::Pose, int);
 	// int trajectoryChecker(moveit_msgs::RobotTrajectory);
 	// void motionPlanner(geometry_msgs::Pose);
 	std_msgs::String URScriptCommand(double [], double, double, double, double);
 	// void cartesianControl();
 	void move_arm();
 	// void shakingMotion();
-	void stirringMotion_1(std::string, double , double, double, int, int, double);
-	void stirringMotion_2(std::string, double , double, double, int, double);
-	void stirringMotion_3(std::string, double , double, double, double, int, int, double);
-	void stirringMotion_4(std::string, double , double, double, int, int, double);
-	double** generatePoints(double, double, double, double, int);
 	void look_behavior(std::string, double, double, double);
+	void stirringBehavior_1(std::string, double , double, double, int, int, double);
+	void stirringBehavior_2(std::string, double , double, double, int, double);
+	void stirringBehavior_3(std::string, double , double, double, double, int, int, double);
+	void stirringBehavior_4(std::string, double , double, double, int, int, double);
+	double** getJointAnglesOnCircularPoints(double, double, double, double, int);
 	void action_position_top();
 	void action_position_down();
-	void initialize_folders(std::string);
+	void startRecording(std::string);
 	// void dataCheck(std::string);
 	// void grabObject();
 };
 
-ur5Behavior::ur5Behavior()
-{
+ur5Behavior::ur5Behavior() {
 	Z_OFFSET = 0.25;
 	NEW_Z_OFFSET = 0.0;
 	Z_coord = 0.704;
@@ -167,20 +161,17 @@ ur5Behavior::ur5Behavior()
 	init_pos();
 }
 
-ur5Behavior::~ur5Behavior()
-{
+ur5Behavior::~ur5Behavior() {
 }
 
-void ur5Behavior::sig_handler(int sig)
-{	
+void ur5Behavior::sig_handler(int sig) {	
 	g_caught_sigint = true;
     ROS_ERROR("Caught sigint, SHUTDOWN...");
     ros::shutdown();
     exit(1);
 }
 
-int ur5Behavior::getch(void)
-{
+int ur5Behavior::getch(void) {
     struct termios oldattr, newattr;
     int ch;
     tcgetattr( STDIN_FILENO, &oldattr );
@@ -192,8 +183,7 @@ int ur5Behavior::getch(void)
     return ch;
 }
 
-bool ur5Behavior::close_gripper(double position = 0.0, double speed = 100.0, double force = 100.0)
-{
+bool ur5Behavior::close_gripper(double position = 0.0, double speed = 100.0, double force = 100.0) {
 	robotiq_85_msgs::GripperCmd msg;
 	msg.position = position;
 	msg.speed = speed;
@@ -204,8 +194,7 @@ bool ur5Behavior::close_gripper(double position = 0.0, double speed = 100.0, dou
 	return 0;
 }
 
-bool ur5Behavior::open_gripper(double position = 1.0, double speed = 1.0, double force = 100.0)
-{	
+bool ur5Behavior::open_gripper(double position = 1.0, double speed = 1.0, double force = 100.0) {
 	robotiq_85_msgs::GripperCmd msg;
 	msg.position = position;
 	msg.speed = speed;
@@ -216,8 +205,7 @@ bool ur5Behavior::open_gripper(double position = 1.0, double speed = 1.0, double
 	return 0;
 }
 
-void ur5Behavior::init_pos()
-{
+void ur5Behavior::init_pos() {
 	ROS_INFO("Moving to the initial position.");
 	open_gripper();
 	std::map<std::string, double> target;
@@ -233,9 +221,7 @@ void ur5Behavior::init_pos()
 	ros::spinOnce();
 }
 
-
-void ur5Behavior::action_position_top()
-{
+void ur5Behavior::action_position_top() {
 	ROS_INFO("Moving to the initial position.");
 	// open_gripper();
 	std::map<std::string, double> target;
@@ -254,8 +240,7 @@ void ur5Behavior::action_position_top()
 	ros::spinOnce();
 }
 
-void ur5Behavior::action_position_down()
-{
+void ur5Behavior::action_position_down() {
 	ROS_INFO("Moving to the initial position.");
 	// open_gripper();
 	std::map<std::string, double> target;
@@ -274,15 +259,13 @@ void ur5Behavior::action_position_down()
 	ros::spinOnce();
 }
 
-void ur5Behavior::move_arm()
-{
+void ur5Behavior::move_arm() {
 	ROS_INFO("Moving the Arm.");
 	group->move();
 	ros::spinOnce();
 }
 
-void ur5Behavior::initialize_folders(std::string folderName)
-{
+void ur5Behavior::startRecording(std::string folderName) {
 	std::string command1 = "mkdir -p " + folderName + "color/";
 	std::string command2 = "mkdir -p " + folderName + "depth/";
 	std::string command3 = "mkdir -p " + folderName + "touch/";
@@ -296,36 +279,30 @@ void ur5Behavior::initialize_folders(std::string folderName)
     srvRequest.request.topic.data = "/joint_states";
     clientObj.call(srvRequest); //set filename/path node1
 	ROS_INFO("Called for joint_states");
-	// getch();
 
     srvRequest.request.command.data = "set_file_name";
     srvRequest.request.fileName.data = folderName + "gripper_joint_states.csv";
     srvRequest.request.topic.data = "/gripper/joint_states";
 	clientObj.call(srvRequest); //set filename/path node2
     ROS_INFO("Called for gripper_joint_states");
-	// getch();
 
 	srvRequest.request.command.data = "set_file_name";
     srvRequest.request.fileName.data = folderName + "wrench.csv";
     srvRequest.request.topic.data = "/wrench";
     clientObj.call(srvRequest); //set filename/path node3
 	ROS_INFO("Called for wrench");
-	// getch();
 
     srvRequest.request.command.data = "set_file_name";
     srvRequest.request.fileName.data = folderName + "audio.wav";
     srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest);
 	ROS_INFO("Called for audio");
-	// getch(); //set filename/path node4
-    // ROS_INFO("File names set. Ready to start recording motion.");
 
 	srvRequest.request.command.data = "set_file_name";
     srvRequest.request.fileName.data = folderName + "color/";
     srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
 	ROS_INFO("Called for color_frame_capture");
-	// getch();
 	
 	srvRequest.request.command.data = "set_file_name";
     srvRequest.request.fileName.data = folderName + "depth/";
@@ -337,15 +314,14 @@ void ur5Behavior::initialize_folders(std::string folderName)
 	srvRequest.request.command.data = "set_file_name";
     srvRequest.request.fileName.data = folderName + "touch/";
     srvRequest.request.topic.data = "touch_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
-    clientObj.call(srvRequest); //set filename/path node4
+    clientObj.call(srvRequest); //set filename/path node5
     ROS_INFO("Called for touch_frame_capture");
 
     srvRequest.request.command.data ="start";
 	clientObj.call(srvRequest);
 }
 
-geometry_msgs::Pose ur5Behavior::getPoseFromCoord(double x, double y, double z)
-{
+geometry_msgs::Pose ur5Behavior::getPoseFromCoord(double x, double y, double z) {
 	geometry_msgs::Pose pose_i;
 	pose_i.position.x = x;
 	pose_i.position.y = y;
@@ -356,8 +332,7 @@ geometry_msgs::Pose ur5Behavior::getPoseFromCoord(double x, double y, double z)
 	return pose_i;
 }
 
-double* ur5Behavior::inverseKinematic(geometry_msgs::Pose pose_i, int planFlag = 0)
-{
+double* ur5Behavior::inverseKinematic(geometry_msgs::Pose pose_i, int planFlag = 0) {
 	static double joint[6];
 
 	geometry_msgs::PoseStamped stampedPose, stampOut;
@@ -378,8 +353,7 @@ double* ur5Behavior::inverseKinematic(geometry_msgs::Pose pose_i, int planFlag =
 	ROS_INFO("Publishing the Pose");
 	pose_pub.publish(stampOut);
 
-	if (planFlag == 1)
-	{
+	if (planFlag == 1) {
 		group->setPoseReferenceFrame(stampOut.header.frame_id);
 		group->setPoseTarget(stampOut);
 		group->setStartState(*group->getCurrentState());
@@ -400,10 +374,7 @@ double* ur5Behavior::inverseKinematic(geometry_msgs::Pose pose_i, int planFlag =
 	return joint;
 }
 
-
-
-std_msgs::String ur5Behavior::URScriptCommand(double joint[], double a = 0.20, double v = 0.20, double t = 0, double r = 0)
-{
+std_msgs::String ur5Behavior::URScriptCommand(double joint[], double a = 0.20, double v = 0.20, double t = 0, double r = 0) {
 	std_msgs::String command; 
 	command.data = "movej([";
 
@@ -440,9 +411,7 @@ std_msgs::String ur5Behavior::URScriptCommand(double joint[], double a = 0.20, d
 	return command;
 }
 
-
-double** ur5Behavior::generatePoints(double x_center, double y_center, double z_center, double radius, int numPoints)
-{
+double** ur5Behavior::getJointAnglesOnCircularPoints(double x_center, double y_center, double z_center, double radius, int numPoints) {
 	double angle_per_point = 360 / numPoints;
 	double* joint_angles_ptr[numPoints + 1];
 	double** joint_angles;
@@ -458,8 +427,7 @@ double** ur5Behavior::generatePoints(double x_center, double y_center, double z_
 	for (int k = 0; k < 6; k++)
 		joint_angles[0][k] = joint_angles_ptr[0][k];
 
-	for(int i = 1; i <= numPoints; i++)
-	{
+	for (int i = 1; i <= numPoints; i++) {
 		double Y = (y_center + radius * sin((i*angle_per_point * 3.14159) / 180));
 		double X = (x_center + radius * cos((i*angle_per_point * 3.14159) / 180));
 		
@@ -473,36 +441,6 @@ double** ur5Behavior::generatePoints(double x_center, double y_center, double z_
 
 	return joint_angles;
 }
-
-void ur5Behavior::look_behavior(std::string base_path, double interval_time = 1.0, double a = 1.5, double v = 1.5)
-{
-	ROS_INFO("Inside Look Behavior.");
-	double x = 0.054;
-	double y = -0.058;
-	double z = 0.636;
-	
-	geometry_msgs::Pose pose = getPoseFromCoord(x, y, z);
-	double* joint_angles_ptr;
-	double joint_angles[6];
-
-	joint_angles_ptr = inverseKinematic(pose);
-
-	for (int k = 0; k < 6; k++)
-		joint_angles[k] = joint_angles_ptr[k];
-
-	std_msgs::String point = URScriptCommand(joint_angles, a, v);
-	ROS_INFO("Moving to Target Position.");
-	command_pub.publish(point);
-	ros::Duration(0.50).sleep();
-
-    initialize_folders(base_path);
-	ros::Duration(interval_time).sleep();
-
-    ROS_INFO("Stopping the data recording node.");
-	srvRequest.request.command.data ="stop";
-	clientObj.call(srvRequest);
-}
-
 
 // void ur5Behavior::dataCheck(std::string base_path)
 // {
@@ -528,10 +466,36 @@ void ur5Behavior::look_behavior(std::string base_path, double interval_time = 1.
 //     std::cout<<"\n\nFile Count : "<<counter<<std::endl;
 // }
 
+void ur5Behavior::look_behavior(std::string base_path, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
+	ROS_INFO("Inside Look Behavior.");
+	double x = 0.054;
+	double y = -0.058;
+	double z = 0.636;
+	
+	geometry_msgs::Pose pose = getPoseFromCoord(x, y, z);
+	double* joint_angles_ptr;
+	double joint_angles[6];
 
-void ur5Behavior::stirringMotion_1(std::string base_path, double a , double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275)
-{	
-	ROS_INFO("Motion 1");
+	joint_angles_ptr = inverseKinematic(pose);
+
+	for (int k = 0; k < 6; k++)
+		joint_angles[k] = joint_angles_ptr[k];
+
+	std_msgs::String point = URScriptCommand(joint_angles, a, v);
+	ROS_INFO("Moving to Target Position.");
+	command_pub.publish(point);
+	ros::Duration(0.50).sleep();
+
+    startRecording(base_path);
+	ros::Duration(interval_time).sleep();
+
+    ROS_INFO("Stopping the data recording node.");
+	srvRequest.request.command.data = "stop";
+	clientObj.call(srvRequest);
+}
+
+void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {	
+	ROS_INFO("Strring Behavior 1");
 	ROS_INFO("Attach the end effector.");
 	getch();
 	close_gripper();
@@ -550,21 +514,19 @@ void ur5Behavior::stirringMotion_1(std::string base_path, double a , double v, d
 	double z = 0.636;
 	// X : 0.054, Y : -0.058, Z : 0.636
 
-	double** joint_angles = generatePoints(x, y, z, radius, numPoints);
+	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 
 	std_msgs::String points[numPoints + 1];
-	for (int i = 0; i <= numPoints; i++){
+	for (int i = 0; i <= numPoints; i++) {
 		points[i] = URScriptCommand(joint_angles[i], a, v);
 	}
 
-	initialize_folders(base_path);
-	ros::Duration(2.0).sleep();
+	startRecording(base_path);
+	ros::Duration(0.5).sleep();
 
-	while (rotations > 0)
-	{	
+	while (rotations > 0) {	
 		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
-		for (int i = 1; i <= numPoints; i++)
-		{
+		for (int i = 1; i <= numPoints; i++) {
 			command_pub.publish(points[i]);
 			ros::Duration(timeDelay).sleep();	
 		}
@@ -580,11 +542,9 @@ void ur5Behavior::stirringMotion_1(std::string base_path, double a , double v, d
 	// dataCheck(base_path);
 }
 
-
-void ur5Behavior::stirringMotion_2(std::string base_path, double a , double v, double radius, int rotations, double timeDelay)
-{
+void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v, double radius, int rotations, double timeDelay) {
 	close_gripper();
-	ROS_INFO("Motion 2");
+	ROS_INFO("Strring Behavior 2");
 
 	double x = 0.054;
 	double y = -0.058;
@@ -600,14 +560,12 @@ void ur5Behavior::stirringMotion_2(std::string base_path, double a , double v, d
 	joint_angles_c[5] -= radius;
 	point[1] = URScriptCommand(joint_angles_c, a, v);
 
-	initialize_folders(base_path);
-	ros::Duration(2.0).sleep();
+	startRecording(base_path);
+	ros::Duration(0.5).sleep();
 
-	while (rotations > 0)
-	{	
+	while (rotations > 0) {	
 		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
-		for (int i = 0 ; i < 2 ; i++)
-		{
+		for (int i = 0 ; i < 2 ; i++) {
 			command_pub.publish(point[i]);
 			ros::Duration(timeDelay).sleep();
 		}
@@ -619,11 +577,9 @@ void ur5Behavior::stirringMotion_2(std::string base_path, double a , double v, d
 	clientObj.call(srvRequest);
 }
 
-
-void ur5Behavior::stirringMotion_3(std::string base_path, double a , double v, double radius, double twist_angle, int rotations = 5, int numPoints = 10, double timeDelay = 0.275)
-{
+void ur5Behavior::stirringBehavior_3(std::string base_path, double a , double v, double radius, double twist_angle, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
 	close_gripper();
-	ROS_INFO("Motion 3");
+	ROS_INFO("Strring Behavior 3");
 	
 	double x = 0.054;
 	double y = -0.058;
@@ -631,18 +587,16 @@ void ur5Behavior::stirringMotion_3(std::string base_path, double a , double v, d
 
 	// X : 0.054, Y : -0.058, Z : 0.636
 
-	double** joint_angles = generatePoints(x, y, z, radius, numPoints);
+	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 	std_msgs::String points_c = URScriptCommand(inverseKinematic(getPoseFromCoord(x, y, z)), a, v);
 
-	initialize_folders(base_path);
-	ros::Duration(2.0).sleep();
+	startRecording(base_path);
+	ros::Duration(0.5).sleep();
 
-	while (rotations > 0)
-	{	
+	while (rotations > 0) {	
 		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
 	
-		for(int i = 1; i <= numPoints ; i++)
-		{
+		for (int i = 1; i <= numPoints ; i++) {
 			if (i % 2 != 0)
 				joint_angles[i][5] += twist_angle;
 			else
@@ -667,30 +621,27 @@ void ur5Behavior::stirringMotion_3(std::string base_path, double a , double v, d
 	command_pub.publish(points_c);
 }
 
-
-void ur5Behavior::stirringMotion_4(std::string base_path, double a , double v, double radius, int rotations, int numPoints, double timeDelay)
-{
-	ROS_INFO("Motion 4");
+void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v, double radius, int rotations, int numPoints, double timeDelay) {
+	close_gripper();
+	ROS_INFO("Strring Behavior 4");
 	
 	double x = 0.054;
 	double y = -0.058;
 	double z = 0.636;
 
-	double** joint_angles = generatePoints(x, y, z, radius, numPoints);
+	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 	std_msgs::String points[numPoints + 1];
-	for (int i = 0; i <= numPoints; i++){
+	for (int i = 0; i <= numPoints; i++) {
 		points[i] = URScriptCommand(joint_angles[i], a, v);
 	}
 	
-	initialize_folders(base_path);
-	ros::Duration(2.0).sleep();
+	startRecording(base_path);
+	ros::Duration(0.5).sleep();
 
-	while (rotations > 0)
-	{	
-		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
+	while (rotations > 0) {	
+		std::cout << "[ INFO] Rotations : " << rotations << "\n";
 		
-		for(int i = 1; i <= numPoints; i++){
-
+		for (int i = 1; i <= numPoints; i++) {
 			// command_pub.publish(points[0]);
 			// ros::Duration(0.90).sleep();
 
@@ -698,17 +649,14 @@ void ur5Behavior::stirringMotion_4(std::string base_path, double a , double v, d
 			ros::Duration(0.90).sleep();
 
 			int j = (i + numPoints/2) % numPoints;
-			if (j == 0){
-
+			if (j == 0) {
 				command_pub.publish(points[numPoints]);
 			}
-			else{
+			else {
 				command_pub.publish(points[j]);
 			}
-			ros::Duration(0.90).sleep();
-			
+			ros::Duration(0.90).sleep();			
 		}
-
 		rotations--;
 	}
 
@@ -720,9 +668,7 @@ void ur5Behavior::stirringMotion_4(std::string base_path, double a , double v, d
 	open_gripper();
 }
 
-
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
 	ros::init(argc, argv, "move_arm");
 
 	ros::AsyncSpinner spinner(0);
@@ -730,22 +676,21 @@ int main(int argc, char **argv)
 
 	ur5Behavior Obj;
 	Obj.look_behavior("/home/pc1/Downloads/Liquid_Dataset/Look/", 1.0);
-	// ROS_INFO("Time out between motions");
-	// ros::Duration(20.0).sleep();
-	Obj.stirringMotion_1("/home/pc1/Downloads/Liquid_Dataset/motion-1/", 1.5, 1.5, 0.025, 5, 10, 0.275);
-	// ROS_INFO("Time out between motions");
-	// ros::Duration(20.0).sleep();
-	Obj.stirringMotion_2("/home/pc1/Downloads/Liquid_Dataset/motion-2/", 1.5, 1.5, 1.0, 5, 0.75);
-	// ROS_INFO("Time out between motions");
-	// ros::Duration(20.0).sleep();
-	Obj.stirringMotion_3("/home/pc1/Downloads/Liquid_Dataset/motion-3/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
-	// ROS_INFO("Time out between motions");
-	// ros::Duration(30.0).sleep();
-	Obj.stirringMotion_4("/home/pc1/Downloads/Liquid_Dataset/motion-4/", 1.5, 1.5, 0.02, 5, 10, 2);
-	// ROS_INFO("Time out between motions");
-	// ros::Duration(20.0).sleep();
+	// ROS_INFO("Time out between behaviors");
+	ros::Duration(2.0).sleep();
+	Obj.stirringBehavior_1("/home/pc1/Downloads/Liquid_Dataset/Behavior-1/", 1.5, 1.5, 0.025, 5, 10, 0.275);
+	// ROS_INFO("Time out between behaviors");
+	ros::Duration(2.0).sleep();
+	Obj.stirringBehavior_2("/home/pc1/Downloads/Liquid_Dataset/Behavior-2/", 1.5, 1.5, 1.0, 5, 0.75);
+	// ROS_INFO("Time out between behaviors");
+	ros::Duration(2.0).sleep();
+	Obj.stirringBehavior_3("/home/pc1/Downloads/Liquid_Dataset/Behavior-3/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
+	// ROS_INFO("Time out between behaviors");
+	ros::Duration(2.0).sleep();
+	Obj.stirringBehavior_4("/home/pc1/Downloads/Liquid_Dataset/Behavior-4/", 1.5, 1.5, 0.02, 5, 10, 2);
+	// ROS_INFO("Time out between behaviors");
+	// ros::Duration(2.0).sleep();
 	spinner.stop();
 
 	return 0;
 }
-

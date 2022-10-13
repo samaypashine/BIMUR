@@ -146,10 +146,9 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(move_arm src/move_arm.cpp)
-target_link_libraries(move_arm ${catkin_LIBRARIES})
-add_dependencies(move_arm joint_recorder_gencpp)
-
+add_executable(tool_behaviors src/tool_behaviors.cpp)
+target_link_libraries(tool_behaviors ${catkin_LIBRARIES})
+add_dependencies(tool_behaviors joint_recorder_gencpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the

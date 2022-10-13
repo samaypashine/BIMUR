@@ -3,8 +3,7 @@
 #include "joint_recorder/recorderSrv.h"
 
 
-int main (int argc, char **argv)
-{
+int main (int argc, char **argv) {
     ros::init(argc, argv,"recorder_client_tester");
     ros::NodeHandle n; 
     ros::ServiceClient clientObj = n.serviceClient<joint_recorder::recorderSrv>("data_recording_service");
