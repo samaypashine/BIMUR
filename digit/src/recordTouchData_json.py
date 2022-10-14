@@ -17,7 +17,7 @@ digit.set_resolution(qvga_res)
 fps_30 = Digit.STREAMS["QVGA"]["fps"]["30fps"]
 digit.set_fps(fps_30)
 
-record_info_path = "record_info.json"
+record_info_path = "src/UR5-ros-melodic/digit/src/record_info.json"
 curr_path = ""
 
 while True:
@@ -35,7 +35,8 @@ while True:
 			print("Frame Saved at the location: ", record_info["PATH"] + str(curr_count) + ".jpg")
 
 			curr_count += 1
-	except:
+	except Exception as e:
+		print(e)
 		digit = Digit("D20501", "Left Gripper")
 		print("digit: ", digit.dev_name)
 		digit.connect()

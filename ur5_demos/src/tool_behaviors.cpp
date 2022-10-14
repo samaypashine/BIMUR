@@ -24,7 +24,7 @@
 #include <std_msgs/String.h>
 #include <std_msgs/Bool.h>
 
-#include<stdlib.h>
+#include <stdlib.h>
 
 #include <arpa/inet.h>
 #include <stdio.h>
@@ -32,6 +32,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 #include <termios.h>
+#include <sys/types.h>
+#include <dirent.h>
 
 #include <tf/tf.h>
 #include <tf/transform_listener.h>
@@ -77,6 +79,108 @@
  * effort: [1.1388397216796875, 2.6812055110931396, 1.275590181350708, 0.4529372453689575, 0.16012932360172272, 0.06405173242092133]
  */
 
+int countFiles(std::string base_path) {
+
+	ROS_INFO("Counting fils in path: %s.\n", base_path.c_str());
+
+	DIR *dp;
+	int i = 0;
+	struct dirent *ep;
+	dp = opendir(base_path.c_str());
+
+	if (dp != NULL) {
+		while (ep = readdir (dp)) {
+			i++;
+		}
+		(void) closedir (dp);
+	}
+	else {
+		perror("Couldn't open the directory");
+		return 0;
+	}
+
+	i = i - 2;
+
+	return i;
+}
+
+bool tryParse(std::string& input, int& output) {
+    try{
+        output = std::stoi(input);
+    } catch (std::invalid_argument) {
+        return false;
+    }
+    return true;
+}
+
+std::string getLabelFromUser(std::vector<std::string> labels) {
+
+	std::sort(labels.begin(), labels.end());
+
+    printf("\nLabels: IDs\n");
+    for (int i=0; i < labels.size(); i++) {
+   		std::cout << labels[i] << ": " << i << "\n";
+	}
+
+	std::string input;
+    int x;
+
+    getline(std::cin, input);
+
+    while (!tryParse(input, x)) {
+        std::cout << "Bad entry. Enter a NUMBER: ";
+        getline(std::cin, input);
+    }
+
+    std::cout << "You Selected: " << labels[x] << "\n";
+
+    return labels[x];
+}
+
+void checkData(std::string base_path) {
+
+	bool dataIssue = false;
+
+	std::string path = base_path;
+	int c = countFiles(path);
+	if (c <= 3) {
+		ROS_ERROR("DATA DID NOT RECORD! There's %d files in %s.", c, path.c_str());
+		dataIssue = true;
+	}
+
+	path = base_path + "color/";
+	c = countFiles(path);
+	if (c <= 10) {
+		ROS_ERROR("CAMERA DATA DID NOT RECORD! There's %d files in %s.", c, path.c_str());
+		dataIssue = true;
+	}
+
+	path = base_path + "touch/";
+	c = countFiles(path);
+	if (c <= 10) {
+		ROS_ERROR("TOUCH DATA DID NOT RECORD! There's %d files in %s.", c, path.c_str());
+		dataIssue = true;
+	}
+
+	if (dataIssue) {
+
+		base_path = base_path.substr(0, base_path.length()-2); // removing the last /
+
+		const size_t last_slash_idx = base_path.rfind("/"); // finding idx of /after trial-X folder
+		if (std::string::npos != last_slash_idx) {
+			base_path = base_path.substr(0, last_slash_idx); // removing behavior folder
+		}
+
+		ROS_ERROR("Do you want to delete the data in %s?", base_path.c_str());
+		std::vector<std::string> options = {"yes", "no"};
+		std::string ans = getLabelFromUser(options);
+
+		if (ans.compare("yes") == 0) {
+			std::string command = "rm -r " + base_path;
+    		system(command.c_str());
+		}
+	}
+}
 
 class ur5Behavior {
 	public:
@@ -121,7 +225,7 @@ class ur5Behavior {
 	// void cartesianControl();
 	void move_arm();
 	// void shakingMotion();
-	void look_behavior(std::string, double, double, double);
+	void lookBehavior(std::string, double, double, double);
 	void stirringBehavior_1(std::string, double , double, double, int, int, double);
 	void stirringBehavior_2(std::string, double , double, double, int, double);
 	void stirringBehavior_3(std::string, double , double, double, double, int, int, double);
@@ -130,7 +234,7 @@ class ur5Behavior {
 	void action_position_top();
 	void action_position_down();
 	void startRecording(std::string);
-	// void dataCheck(std::string);
+	// void checkData(std::string);
 	// void grabObject();
 };
 
@@ -442,31 +546,7 @@ double** ur5Behavior::getJointAnglesOnCircularPoints(double x_center, double y_c
 	return joint_angles;
 }
 
-// void ur5Behavior::dataCheck(std::string base_path)
-// {
-// 	base_path += "color/";
-
-// 	int counter = 0;
-//     WIN32_FIND_DATA ffd;
-//     HANDLE hFind = INVALID_HANDLE_VALUE;
-
-//     // Start iterating over the files in the path directory.
-//     hFind = ::FindFirstFileA (base_path.c_str(), &ffd);
-//     if (hFind != INVALID_HANDLE_VALUE)
-//     {
-//         do // Managed to locate and create an handle to that folder.
-//         { 
-//             counter++;
-//         } while (::FindNextFile(hFind, &ffd) == TRUE);
-//         ::FindClose(hFind);
-//     } else {
-//         printf("Failed to find path: %s", base_path.c_str());
-//     }
-
-//     std::cout<<"\n\nFile Count : "<<counter<<std::endl;
-// }
-
-void ur5Behavior::look_behavior(std::string base_path, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
+void ur5Behavior::lookBehavior(std::string base_path, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
 	ROS_INFO("Inside Look Behavior.");
 	double x = 0.054;
 	double y = -0.058;
@@ -511,7 +591,7 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v,
 
 	double x = 0.054;
 	double y = -0.058;
-	double z = 0.636;
+	double z = 0.66;  // 0.636
 	// X : 0.054, Y : -0.058, Z : 0.636
 
 	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
@@ -538,8 +618,6 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v,
 	clientObj.call(srvRequest);
 
 	command_pub.publish(points[0]);
-
-	// dataCheck(base_path);
 }
 
 void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v, double radius, int rotations, double timeDelay) {
@@ -665,32 +743,79 @@ void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v,
 	clientObj.call(srvRequest);
 
 	command_pub.publish(points[0]);
-	open_gripper();
 }
+
+
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "move_arm");
-
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
 
+	std::string sensorDataPath = "/home/pc1/Downloads/Liquid_Dataset/";
+
+	auto t = std::time(nullptr);
+    auto tm = *std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
+    auto curr_time = oss.str();
+    std::cout << curr_time << std::endl;
+
+    std::string robotName = "ur5";
+    std::vector<std::string> tools = {"placticspoon", "metalspoon"};
+    std::vector<std::string> contents = {"chickpea", "wheat"};
+
+    std::string tool = getLabelFromUser(tools);
+    std::string content = getLabelFromUser(contents);
+    std::string objectName = robotName + "_" + tool + "_" + content;
+    std::cout << "objectName: " << objectName << "\n";
+
+    int trialNo = countFiles(sensorDataPath + objectName + "/");
+    std::cout << "trialNo: " << trialNo << "\n";
+
+    std::string trialNoStr = std::to_string(trialNo);
+
+    sensorDataPath += objectName + "/" + "trial-" + trialNoStr + "_" + curr_time + "/";
+    std::cout << "sensorDataPath: " << sensorDataPath << "\n";
+
 	ur5Behavior Obj;
-	Obj.look_behavior("/home/pc1/Downloads/Liquid_Dataset/Look/", 1.0);
-	// ROS_INFO("Time out between behaviors");
+
+	Obj.lookBehavior(sensorDataPath + "behavior-1-look/", 1.0);
 	ros::Duration(2.0).sleep();
-	Obj.stirringBehavior_1("/home/pc1/Downloads/Liquid_Dataset/Behavior-1/", 1.5, 1.5, 0.025, 5, 10, 0.275);
-	// ROS_INFO("Time out between behaviors");
+	checkData(sensorDataPath + "behavior-1-look/");
+	
+	Obj.stirringBehavior_1(sensorDataPath + "behavior-2-slow/", 0.1, 0.1, 0.025, 5, 10, 1);
 	ros::Duration(2.0).sleep();
-	Obj.stirringBehavior_2("/home/pc1/Downloads/Liquid_Dataset/Behavior-2/", 1.5, 1.5, 1.0, 5, 0.75);
-	// ROS_INFO("Time out between behaviors");
+	checkData(sensorDataPath + "behavior-2-slow/");
+
+	Obj.stirringBehavior_1(sensorDataPath + "behavior-2-fast/", 1, 1, 0.025, 5, 10, 0.4);
 	ros::Duration(2.0).sleep();
-	Obj.stirringBehavior_3("/home/pc1/Downloads/Liquid_Dataset/Behavior-3/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
-	// ROS_INFO("Time out between behaviors");
+	checkData(sensorDataPath + "Behavior-3-fast/");
+
+	Obj.stirringBehavior_2(sensorDataPath + "behavior-3/", 1.5, 1.5, 1.0, 5, 0.75);
 	ros::Duration(2.0).sleep();
-	Obj.stirringBehavior_4("/home/pc1/Downloads/Liquid_Dataset/Behavior-4/", 1.5, 1.5, 0.02, 5, 10, 2);
-	// ROS_INFO("Time out between behaviors");
-	// ros::Duration(2.0).sleep();
+	checkData(sensorDataPath + "behavior-2/");
+
+	Obj.stirringBehavior_3(sensorDataPath + "behavior-4/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
+	ros::Duration(2.0).sleep();
+	checkData(sensorDataPath + "behavior-3/");
+
+	Obj.stirringBehavior_4(sensorDataPath + "Behavior-5/", 1.5, 1.5, 0.02, 5, 10, 2);
+	ros::Duration(2.0).sleep();
+	checkData(sensorDataPath + "behavior-4/");
+
+	Obj.open_gripper();
 	spinner.stop();
 
 	return 0;
+
+	/*
+	TODO:
+	X Count no. of files in a folder to check recorded data
+	X Add time stamp to folder
+	X Ask user for object id (e.g. tool, contect)
+	X Compute trial no.
+	Ask user if trial is okay
+	*/
+
 }
