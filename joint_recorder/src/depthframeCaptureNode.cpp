@@ -23,13 +23,14 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#include<stdlib.h>
-#include<string.h>
-
+#include <stdlib.h>
+#include <string.h>
+#include <iomanip>
 
 bool recordFlag = false;
 std::ofstream file; 
 std::string folderName, thisNodeName;
+int num1 = 0;
 
 
 void frame_topic2_callback(const sensor_msgs::ImageConstPtr& msg) {
@@ -45,9 +46,21 @@ void frame_topic2_callback(const sensor_msgs::ImageConstPtr& msg) {
           return;
         }
 
+        std::ostringstream count;
+        count << std::internal << std::setfill('0') << std::setw(5) << num1;
+
         ros::Time timestamp = msg->header.stamp;
-        std::string png_file = folderName + std::to_string(timestamp.sec) + "." + std::to_string(timestamp.nsec) + ".jpg";
-        cv::imwrite(png_file, cv_ptr->image);
+        double timestamp2 = std::stod(std::to_string(timestamp.sec) + "." + std::to_string(timestamp.nsec));
+
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(9) << timestamp2;
+        std::string timestamp3 = stream.str();
+        
+        std::string img_file = folderName + count.str() + "_" + timestamp3.c_str() + ".jpg";
+
+        cv::imwrite(img_file, cv_ptr->image);
+
+        num1++;
     }
     ros::spinOnce();
 }
@@ -61,11 +74,13 @@ void recordingControlCallback(const joint_recorder::recorderMsg::ConstPtr& msg) 
       if (msg->command.data.compare("start") == 0) {
         ROS_INFO("In Start condition of recordService callback function");
         recordFlag = true;
+        num1 = 0;
       }      
       else if (msg->command.data.compare("stop") == 0) {
           ROS_ERROR("In STOP condition of recordService callback function"); //Stop recording but keep node running
           recordFlag = false;
           folderName = "";
+          num1 = 0;
       }
       else if (msg->command.data.compare("shutdown") == 0) { //shut node down
           ROS_ERROR("Shutting down");

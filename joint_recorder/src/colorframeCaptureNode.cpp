@@ -23,14 +23,14 @@
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb/stb_image_write.h"
 
-#include<stdlib.h>
-#include<string.h>
-
+#include <stdlib.h>
+#include <string.h>
+#include <iomanip>
 
 bool recordFlag = false;
 std::ofstream file; 
 std::string folderName, thisNodeName;
-
+int num1 = 0;
 
 void frame_topic1_callback(const sensor_msgs::ImageConstPtr& msg) {
     if (recordFlag) {
@@ -44,13 +44,23 @@ void frame_topic1_callback(const sensor_msgs::ImageConstPtr& msg) {
           return;
         }
 
-        ros::Time timestamp = msg->header.stamp;
+        std::ostringstream count;
+        count << std::internal << std::setfill('0') << std::setw(5) << num1;
 
-        std::string png_file = folderName + std::to_string(timestamp.sec) + "." + std::to_string(timestamp.nsec) + ".jpg";
-        cv::imwrite(png_file, cv_ptr->image);
+        ros::Time timestamp = msg->header.stamp;
+        double timestamp2 = std::stod(std::to_string(timestamp.sec) + "." + std::to_string(timestamp.nsec));
+
+        std::stringstream stream;
+        stream << std::fixed << std::setprecision(9) << timestamp2;
+        std::string timestamp3 = stream.str();
         
+        std::string img_file = folderName + count.str() + "_" + timestamp3.c_str() + ".jpg";
+
+        cv::imwrite(img_file, cv_ptr->image);
+
+        num1++;
     }
-    ros::spinOnce(); 
+    ros::spinOnce();
 }
 
 void recordingControlCallback(const joint_recorder::recorderMsg::ConstPtr& msg) {
@@ -62,10 +72,12 @@ void recordingControlCallback(const joint_recorder::recorderMsg::ConstPtr& msg) 
       if (msg->command.data.compare("start") == 0) { 
         ROS_INFO("In Start condition of recordService callback function");
         recordFlag = true;
+        num1 = 0;
       }
       else if (msg->command.data.compare("stop") == 0) {
           ROS_ERROR("In STOP condition of recordService callback function"); //Stop recording but keep node running
           recordFlag = false;
+          num1 = 0;
           folderName = "";
       }
       else if (msg->command.data.compare("shutdown") == 0) { // shut node down
@@ -89,7 +101,7 @@ int main(int argc, char **argv) {
   ros::Subscriber color_sub = n.subscribe("/camera/color/image_raw", 10, &frame_topic1_callback);
 
   while (ros::ok()) {
-    ROS_INFO("Listening to /camera/color/image_raw");
+    // ROS_INFO("Listening to /camera/color/image_raw");
     ros::spinOnce();
   }
   return 0;

@@ -31,8 +31,9 @@ while True:
 			if curr_path != record_info["PATH"]:
 				curr_path = record_info["PATH"]
 				curr_count = 0
-			frame = digit.save_frame(record_info["PATH"] + str(curr_count) + ".jpg")
-			print("Frame Saved at the location: ", record_info["PATH"] + str(curr_count) + ".jpg")
+			img_name = record_info["PATH"] + f'{curr_count:05}' + ".jpg"
+			frame = digit.save_frame(img_name)
+			print("Frame Saved at the location: ", img_name)
 
 			curr_count += 1
 	except Exception as e:

@@ -33,6 +33,7 @@
 #include <unistd.h>
 #include <termios.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <dirent.h>
 
 #include <tf/tf.h>
@@ -137,6 +138,13 @@ std::string getLabelFromUser(std::vector<std::string> labels) {
     return labels[x];
 }
 
+long getFileSize(std::string filename) {
+
+    struct stat stat_buf;
+    int rc = stat(filename.c_str(), &stat_buf);
+    return rc == 0 ? stat_buf.st_size : -1;
+}
+
 void checkData(std::string base_path) {
 
 	bool dataIssue = false;
@@ -148,17 +156,24 @@ void checkData(std::string base_path) {
 		dataIssue = true;
 	}
 
-	path = base_path + "color/";
+	path = base_path + "camera_rgb_image/";
 	c = countFiles(path);
 	if (c <= 10) {
 		ROS_ERROR("CAMERA DATA DID NOT RECORD! There's %d files in %s.", c, path.c_str());
 		dataIssue = true;
 	}
 
-	path = base_path + "touch/";
+	path = base_path + "touch_image/";
 	c = countFiles(path);
 	if (c <= 10) {
 		ROS_ERROR("TOUCH DATA DID NOT RECORD! There's %d files in %s.", c, path.c_str());
+		dataIssue = true;
+	}
+
+	path = base_path + "audio.wav";
+	long s = getFileSize(path) / 1024;  // KB
+	if (s < 1) {
+		ROS_ERROR("AUDIO DATA DID NOT RECORD! Audio file size is %d in %s.", s, path.c_str());
 		dataIssue = true;
 	}
 
@@ -370,9 +385,9 @@ void ur5Behavior::move_arm() {
 }
 
 void ur5Behavior::startRecording(std::string folderName) {
-	std::string command1 = "mkdir -p " + folderName + "color/";
-	std::string command2 = "mkdir -p " + folderName + "depth/";
-	std::string command3 = "mkdir -p " + folderName + "touch/";
+	std::string command1 = "mkdir -p " + folderName + "camera_rgb_image/";
+	std::string command2 = "mkdir -p " + folderName + "camera_depth_image/";
+	std::string command3 = "mkdir -p " + folderName + "touch_image/";
     system(command1.c_str());		
     system(command2.c_str());		
     system(command3.c_str());	
@@ -403,20 +418,20 @@ void ur5Behavior::startRecording(std::string folderName) {
 	ROS_INFO("Called for audio");
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "color/";
+    srvRequest.request.fileName.data = folderName + "camera_rgb_image/";
     srvRequest.request.topic.data = "color_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
 	ROS_INFO("Called for color_frame_capture");
 	
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "depth/";
+    srvRequest.request.fileName.data = folderName + "camera_depth_image/";
     srvRequest.request.topic.data = "depth_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node4
     ROS_INFO("Called for depth_frame_capture");
 	// getch();
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "touch/";
+    srvRequest.request.fileName.data = folderName + "touch_image/";
     srvRequest.request.topic.data = "touch_frame_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest); //set filename/path node5
     ROS_INFO("Called for touch_frame_capture");
@@ -547,10 +562,11 @@ double** ur5Behavior::getJointAnglesOnCircularPoints(double x_center, double y_c
 }
 
 void ur5Behavior::lookBehavior(std::string base_path, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
+
 	ROS_INFO("Inside Look Behavior.");
 	double x = 0.054;
 	double y = -0.058;
-	double z = 0.636;
+	double z = 0.66;  // 0.636
 	
 	geometry_msgs::Pose pose = getPoseFromCoord(x, y, z);
 	double* joint_angles_ptr;
@@ -564,7 +580,7 @@ void ur5Behavior::lookBehavior(std::string base_path, double interval_time = 1.0
 	std_msgs::String point = URScriptCommand(joint_angles, a, v);
 	ROS_INFO("Moving to Target Position.");
 	command_pub.publish(point);
-	ros::Duration(0.50).sleep();
+	ros::Duration(1).sleep();
 
     startRecording(base_path);
 	ros::Duration(interval_time).sleep();
@@ -574,7 +590,8 @@ void ur5Behavior::lookBehavior(std::string base_path, double interval_time = 1.0
 	clientObj.call(srvRequest);
 }
 
-void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {	
+void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
+
 	ROS_INFO("Strring Behavior 1");
 	ROS_INFO("Attach the end effector.");
 	getch();
@@ -621,12 +638,13 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v,
 }
 
 void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v, double radius, int rotations, double timeDelay) {
+
 	close_gripper();
 	ROS_INFO("Strring Behavior 2");
 
 	double x = 0.054;
 	double y = -0.058;
-	double z = 0.636;
+	double z = 0.66;  // 0.636
 
 	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);	
 	double* joint_angles_c = inverseKinematic(pose_c);
@@ -656,12 +674,13 @@ void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v,
 }
 
 void ur5Behavior::stirringBehavior_3(std::string base_path, double a , double v, double radius, double twist_angle, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
+
 	close_gripper();
 	ROS_INFO("Strring Behavior 3");
 	
 	double x = 0.054;
 	double y = -0.058;
-	double z = 0.636;
+	double z = 0.66;  // 0.636
 
 	// X : 0.054, Y : -0.058, Z : 0.636
 
@@ -700,12 +719,13 @@ void ur5Behavior::stirringBehavior_3(std::string base_path, double a , double v,
 }
 
 void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v, double radius, int rotations, int numPoints, double timeDelay) {
+
 	close_gripper();
 	ROS_INFO("Strring Behavior 4");
 	
 	double x = 0.054;
 	double y = -0.058;
-	double z = 0.636;
+	double z = 0.66;  // 0.636
 
 	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 	std_msgs::String points[numPoints + 1];
@@ -745,8 +765,6 @@ void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v,
 	command_pub.publish(points[0]);
 }
 
-
-
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "move_arm");
 	ros::AsyncSpinner spinner(0);
@@ -759,7 +777,7 @@ int main(int argc, char **argv) {
     std::ostringstream oss;
     oss << std::put_time(&tm, "%d-%m-%Y-%H-%M-%S");
     auto curr_time = oss.str();
-    std::cout << curr_time << std::endl;
+    std::cout << "Time Stamp: " << curr_time << std::endl;
 
     std::string robotName = "ur5";
     std::vector<std::string> tools = {"placticspoon", "metalspoon"};
@@ -780,29 +798,35 @@ int main(int argc, char **argv) {
 
 	ur5Behavior Obj;
 
-	Obj.lookBehavior(sensorDataPath + "behavior-1-look/", 1.0);
+	std::string behaviorName = "behavior-1-look";
+	Obj.lookBehavior(sensorDataPath + behaviorName + "/", 1.0);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + "behavior-1-look/");
+	checkData(sensorDataPath + behaviorName + "/");
 	
-	Obj.stirringBehavior_1(sensorDataPath + "behavior-2-slow/", 0.1, 0.1, 0.025, 5, 10, 1);
+	behaviorName = "behavior-2-slow";
+	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", 0.1, 0.1, 0.025, 5, 10, 1);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + "behavior-2-slow/");
+	checkData(sensorDataPath + behaviorName + "/");
 
-	Obj.stirringBehavior_1(sensorDataPath + "behavior-2-fast/", 1, 1, 0.025, 5, 10, 0.4);
+	behaviorName = "behavior-2-fast";
+	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", 1, 1, 0.025, 5, 10, 0.4);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + "Behavior-3-fast/");
+	checkData(sensorDataPath + behaviorName + "/");
 
-	Obj.stirringBehavior_2(sensorDataPath + "behavior-3/", 1.5, 1.5, 1.0, 5, 0.75);
-	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + "behavior-2/");
+	// behaviorName = "behavior-3";
+	// Obj.stirringBehavior_2(sensorDataPath + behaviorName + "/", 1.5, 1.5, 1.0, 5, 0.75);
+	// ros::Duration(2.0).sleep();
+	// checkData(sensorDataPath + behaviorName + "/");
 
-	Obj.stirringBehavior_3(sensorDataPath + "behavior-4/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
-	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + "behavior-3/");
+	// behaviorName = "behavior-4";
+	// Obj.stirringBehavior_3(sensorDataPath + behaviorName + "/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
+	// ros::Duration(2.0).sleep();
+	// checkData(sensorDataPath + behaviorName + "/");
 
-	Obj.stirringBehavior_4(sensorDataPath + "Behavior-5/", 1.5, 1.5, 0.02, 5, 10, 2);
-	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + "behavior-4/");
+	// behaviorName = "behavior-5";
+	// Obj.stirringBehavior_4(sensorDataPath + behaviorName + "/", 1.5, 1.5, 0.02, 5, 10, 2);
+	// ros::Duration(2.0).sleep();
+	// checkData(sensorDataPath + behaviorName + "/");
 
 	Obj.open_gripper();
 	spinner.stop();
@@ -815,6 +839,8 @@ int main(int argc, char **argv) {
 	X Add time stamp to folder
 	X Ask user for object id (e.g. tool, contect)
 	X Compute trial no.
+	X Check audio file size
+
 	Ask user if trial is okay
 	*/
 
