@@ -80,6 +80,18 @@
  * effort: [1.1388397216796875, 2.6812055110931396, 1.275590181350708, 0.4529372453689575, 0.16012932360172272, 0.06405173242092133]
  */
 
+int getch(void) {
+    struct termios oldattr, newattr;
+    int ch;
+    tcgetattr( STDIN_FILENO, &oldattr );
+    newattr = oldattr;
+    newattr.c_lflag &= ~( ICANON | ECHO );
+    tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
+    ch = getchar();
+    tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
+    return ch;
+}
+
 int countFiles(std::string base_path) {
 
 	ROS_INFO("Counting fils in path: %s.\n", base_path.c_str());
@@ -145,6 +157,26 @@ long getFileSize(std::string filename) {
     return rc == 0 ? stat_buf.st_size : -1;
 }
 
+void deleteTrial(std::string base_path) {
+	// Given the behavior data path, find trial path and ask user to delete it
+
+	base_path = base_path.substr(0, base_path.length()-2); // removing the last /
+
+	const size_t last_slash_idx = base_path.rfind("/"); // finding idx of / after trial-X folder
+	if (std::string::npos != last_slash_idx) {
+		base_path = base_path.substr(0, last_slash_idx); // removing behavior folder
+	}
+
+	ROS_ERROR("Do you want to delete the data in %s?", base_path.c_str());
+	std::vector<std::string> options = {"yes", "no"};
+	std::string ans = getLabelFromUser(options);
+
+	if (ans.compare("yes") == 0) {
+		std::string command = "rm -r " + base_path;
+		system(command.c_str());
+	}
+}
+
 void checkData(std::string base_path) {
 
 	bool dataIssue = false;
@@ -178,22 +210,7 @@ void checkData(std::string base_path) {
 	}
 
 	if (dataIssue) {
-
-		base_path = base_path.substr(0, base_path.length()-2); // removing the last /
-
-		const size_t last_slash_idx = base_path.rfind("/"); // finding idx of /after trial-X folder
-		if (std::string::npos != last_slash_idx) {
-			base_path = base_path.substr(0, last_slash_idx); // removing behavior folder
-		}
-
-		ROS_ERROR("Do you want to delete the data in %s?", base_path.c_str());
-		std::vector<std::string> options = {"yes", "no"};
-		std::string ans = getLabelFromUser(options);
-
-		if (ans.compare("yes") == 0) {
-			std::string command = "rm -r " + base_path;
-    		system(command.c_str());
-		}
+		deleteTrial(base_path);
 	}
 }
 
@@ -226,7 +243,6 @@ class ur5Behavior {
 	ur5Behavior();
 	~ur5Behavior();
 	void sig_handler(int sig);
-	int getch(void);
 	bool close_gripper(double, double, double);
 	bool open_gripper(double, double, double);
 	void init_pos();
@@ -288,18 +304,6 @@ void ur5Behavior::sig_handler(int sig) {
     ROS_ERROR("Caught sigint, SHUTDOWN...");
     ros::shutdown();
     exit(1);
-}
-
-int ur5Behavior::getch(void) {
-    struct termios oldattr, newattr;
-    int ch;
-    tcgetattr( STDIN_FILENO, &oldattr );
-    newattr = oldattr;
-    newattr.c_lflag &= ~( ICANON | ECHO );
-    tcsetattr( STDIN_FILENO, TCSANOW, &newattr );
-    ch = getchar();
-    tcsetattr( STDIN_FILENO, TCSANOW, &oldattr );
-    return ch;
 }
 
 bool ur5Behavior::close_gripper(double position = 0.0, double speed = 100.0, double force = 100.0) {
@@ -594,17 +598,17 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a , double v,
 
 	ROS_INFO("Strring Behavior 1");
 	ROS_INFO("Attach the end effector.");
-	getch();
+	// getch();
 	close_gripper();
-	getch();
+	// getch();
 
 	ROS_INFO("Moving Above the Container");
 	action_position_top();
-	getch();
+	// getch();
 
 	ROS_INFO("Lowering the arm.");
 	action_position_down();
-	getch();
+	// getch();
 
 	double x = 0.054;
 	double y = -0.058;
@@ -770,7 +774,7 @@ int main(int argc, char **argv) {
 	ros::AsyncSpinner spinner(0);
 	spinner.start();
 
-	std::string sensorDataPath = "/home/pc1/Downloads/Liquid_Dataset/";
+	std::string sensorDataPath = "/home/pc1/Downloads/Tool_Dataset/";
 
 	auto t = std::time(nullptr);
     auto tm = *std::localtime(&t);
@@ -785,16 +789,16 @@ int main(int argc, char **argv) {
 
     std::string tool = getLabelFromUser(tools);
     std::string content = getLabelFromUser(contents);
-    std::string objectName = robotName + "_" + tool + "_" + content;
-    std::cout << "objectName: " << objectName << "\n";
+    sensorDataPath += robotName + "_" + tool + "/" + content + "/";
 
-    int trialNo = countFiles(sensorDataPath + objectName + "/");
+    int trialNo = countFiles(sensorDataPath);
     std::cout << "trialNo: " << trialNo << "\n";
 
     std::string trialNoStr = std::to_string(trialNo);
-
-    sensorDataPath += objectName + "/" + "trial-" + trialNoStr + "_" + curr_time + "/";
+    sensorDataPath += "trial-" + trialNoStr + "_" + curr_time + "/";
     std::cout << "sensorDataPath: " << sensorDataPath << "\n";
+    std::cout << "If the path above look good, press ENTER, otherwise press Ctrl+c? " << "\n";
+    getch();
 
 	ur5Behavior Obj;
 
@@ -831,17 +835,12 @@ int main(int argc, char **argv) {
 	Obj.open_gripper();
 	spinner.stop();
 
+	deleteTrial(sensorDataPath + behaviorName + "/");
+
 	return 0;
 
 	/*
 	TODO:
-	X Count no. of files in a folder to check recorded data
-	X Add time stamp to folder
-	X Ask user for object id (e.g. tool, contect)
-	X Compute trial no.
-	X Check audio file size
-
-	Ask user if trial is okay
 	*/
 
 }
