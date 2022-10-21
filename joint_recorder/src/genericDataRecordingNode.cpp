@@ -92,6 +92,7 @@ void recordingControlCallback(const joint_recorder::recorderMsg::ConstPtr& msg) 
       else if (msg->command.data.compare("stop") == 0) {
           // ROS_ERROR("In STOP condition of recordService callback function");
           recordFlag = false;
+          isFirstRun = true;
       }
       else if (msg->command.data.compare("shutdown") == 0) {
           // ROS_ERROR("Shutting down");

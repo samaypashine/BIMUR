@@ -11,10 +11,10 @@ print("digit: ", digit.dev_name)
 digit.connect()
 digit.set_intensity(Digit.LIGHTING_MAX)
 
-qvga_res = Digit.STREAMS["QVGA"]
+qvga_res = Digit.STREAMS["VGA"]
 digit.set_resolution(qvga_res)
 
-fps_30 = Digit.STREAMS["QVGA"]["fps"]["30fps"]
+fps_30 = Digit.STREAMS["VGA"]["fps"]["15fps"]
 digit.set_fps(fps_30)
 
 record_info_path = "src/UR5-ros-melodic/digit/src/record_info.json"
@@ -31,6 +31,10 @@ while True:
 			if curr_path != record_info["PATH"]:
 				curr_path = record_info["PATH"]
 				curr_count = 0
+				# Skipping a few frames
+				for _ in range(5):
+					img_name = record_info["PATH"] + f'{"0":05}' + ".jpg"
+					frame = digit.save_frame(img_name)
 			img_name = record_info["PATH"] + f'{curr_count:05}' + ".jpg"
 			frame = digit.save_frame(img_name)
 			print("Frame Saved at the location: ", img_name)

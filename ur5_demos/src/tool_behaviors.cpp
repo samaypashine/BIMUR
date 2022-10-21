@@ -202,7 +202,7 @@ void checkData(std::string base_path) {
 		dataIssue = true;
 	}
 
-	path = base_path + "audio.wav";
+	path = base_path + "audio/audio.wav";
 	long s = getFileSize(path) / 1024;  // KB
 	if (s < 1) {
 		ROS_ERROR("AUDIO DATA DID NOT RECORD! Audio file size is %d in %s.", s, path.c_str());
@@ -392,31 +392,39 @@ void ur5Behavior::startRecording(std::string folderName) {
 	std::string command1 = "mkdir -p " + folderName + "camera_rgb_image/";
 	std::string command2 = "mkdir -p " + folderName + "camera_depth_image/";
 	std::string command3 = "mkdir -p " + folderName + "touch_image/";
-    system(command1.c_str());		
-    system(command2.c_str());		
-    system(command3.c_str());	
+	std::string command4 = "mkdir -p " + folderName + "joint_states/";
+	std::string command5 = "mkdir -p " + folderName + "gripper_joint_states/";
+	std::string command6 = "mkdir -p " + folderName + "wrench/";
+	std::string command7 = "mkdir -p " + folderName + "audio/";
+    system(command1.c_str());
+    system(command2.c_str());
+    system(command3.c_str());
+    system(command4.c_str());
+    system(command5.c_str());
+    system(command6.c_str());
+    system(command7.c_str());
     ROS_INFO("Folder structure created.");	
 	
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "joint_states.csv";
+    srvRequest.request.fileName.data = folderName + "joint_states/joint_states.csv";
     srvRequest.request.topic.data = "/joint_states";
     clientObj.call(srvRequest); //set filename/path node1
 	ROS_INFO("Called for joint_states");
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "gripper_joint_states.csv";
+    srvRequest.request.fileName.data = folderName + "gripper_joint_states/gripper_joint_states.csv";
     srvRequest.request.topic.data = "/gripper/joint_states";
 	clientObj.call(srvRequest); //set filename/path node2
     ROS_INFO("Called for gripper_joint_states");
 
 	srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "wrench.csv";
+    srvRequest.request.fileName.data = folderName + "wrench/wrench.csv";
     srvRequest.request.topic.data = "/wrench";
     clientObj.call(srvRequest); //set filename/path node3
 	ROS_INFO("Called for wrench");
 
     srvRequest.request.command.data = "set_file_name";
-    srvRequest.request.fileName.data = folderName + "audio.wav";
+    srvRequest.request.fileName.data = folderName + "audio/audio.wav";
     srvRequest.request.topic.data = "audio_capture"; // "topic" here is just for the node to recognize that the command is intended for itself
     clientObj.call(srvRequest);
 	ROS_INFO("Called for audio");
