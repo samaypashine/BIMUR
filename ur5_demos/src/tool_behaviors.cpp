@@ -255,21 +255,18 @@ class ur5Behavior {
 	std_msgs::String URScriptCommand(double [], double, double, double, double);
 	// void cartesianControl();
 	void move_arm();
+	void move_arm_urscript(double, double, double, double);
 	// void shakingMotion();
-	void lookBehavior(std::string, double, double, double);
-	void stirringBehavior_1(std::string, double , double, double, int, int, double);
-	void stirringBehavior_2(std::string, double , double, double, int, double);
-	void stirringBehavior_3(std::string, double , double, double, double, int, int, double);
-	void stirringBehavior_4(std::string, double , double, double, int, int, double);
-	void stirringBehavior_5(std::string, double , double, double, int, int, double);
+	void lookBehavior(std::string, double, double, double, double, double, double);
+	void stirringBehavior_1(std::string, double, double, double, double, double, double, int, int, double);
+	void stirringBehavior_2(std::string, double, double, double, double, double, double, int, double);
+	void stirringBehavior_3(std::string, double, double, double, double, double, double, double, int, int, double);
+	void stirringBehavior_4(std::string, double, double, double, double, double, double, int, int, double);
+	void stirringBehavior_5(std::string, double, double, double, double, double, double, int, int, double);
 	double** getJointAnglesOnCircularPoints(double, double, double, double, int);
 	void action_position_top();
-	void action_position_top_urscript(double , double);
 	void action_position_down();
-	void action_position_down_urscript(double , double);
 	void startRecording(std::string);
-	// void checkData(std::string);
-	// void grabObject();
 };
 
 ur5Behavior::ur5Behavior() {
@@ -335,9 +332,9 @@ void ur5Behavior::init_pos() {
 	ROS_INFO("Moving to the initial position.");
 	open_gripper();
 	std::map<std::string, double> target;
-	target["shoulder_pan_joint"] =  0.4166615605354309;
-	target["shoulder_lift_joint"] =  -1.6050642172442835;
-	target["elbow_joint"] =  2.164191246032715;
+	target["shoulder_pan_joint"] = 0.4166615605354309;
+	target["shoulder_lift_joint"] = -1.6050642172442835;
+	target["elbow_joint"] = 2.164191246032715;
 	target["wrist_1_joint"] = 3.720980167388916;
 	target["wrist_2_joint"] = -4.021045986806051;
 	target["wrist_3_joint"] = -0.6397879759417933;
@@ -351,8 +348,8 @@ void ur5Behavior::action_position_top() {
 	ROS_INFO("Moving to the initial position.");
 	// open_gripper();
 	std::map<std::string, double> target;
-	target["shoulder_pan_joint"] =  -0.625642;
-	target["shoulder_lift_joint"] =  -0.530822;
+	target["shoulder_pan_joint"] = -0.625642;
+	target["shoulder_lift_joint"] = -0.530822;
 	target["elbow_joint"] =  2.27726;
 	target["wrist_1_joint"] = 3.49744;
 	target["wrist_2_joint"] = -4.10288;
@@ -576,12 +573,8 @@ double** ur5Behavior::getJointAnglesOnCircularPoints(double x_center, double y_c
 	return joint_angles;
 }
 
-void ur5Behavior::action_position_top_urscript(double z = 0.6, double timeDelay = 2.0) {
-	ROS_INFO("Moving to the initial position.");
-
-	double x = 0.054;
-	double y = -0.058;
-	// double z = 0.6;  // 0.66, 0.636, 0.556
+void ur5Behavior::move_arm_urscript(double x, double y, double z, double timeDelay = 2.0) {
+	ROS_INFO("Moving arm.");
 
 	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);
 	double* joint_angles_c = inverseKinematic(pose_c);
@@ -591,25 +584,10 @@ void ur5Behavior::action_position_top_urscript(double z = 0.6, double timeDelay 
 	ros::Duration(timeDelay).sleep();
 }
 
-void ur5Behavior::action_position_down_urscript(double z = 0.66, double timeDelay = 2.0) {
-	ROS_INFO("Moving to the initial position.");
-
-	double x = 0.054;
-	double y = -0.058;
-	// double z = 0.66;  // 0.66, 0.636, 0.556
-
-	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);
-	double* joint_angles_c = inverseKinematic(pose_c);
-	std_msgs::String points = URScriptCommand(joint_angles_c);
-
-	command_pub.publish(points);
-	ros::Duration(timeDelay).sleep();
-}
-
-void ur5Behavior::lookBehavior(std::string base_path, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
+void ur5Behavior::lookBehavior(std::string base_path, double x, double y, double z, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
 
 	ROS_INFO("Inside Look Behavior.");
-	action_position_top_urscript(0.6, 1);
+	move_arm_urscript(x, y, z - 0.06, 2);
 
     startRecording(base_path);
 	ros::Duration(interval_time).sleep();
@@ -619,7 +597,7 @@ void ur5Behavior::lookBehavior(std::string base_path, double interval_time = 1.0
 	clientObj.call(srvRequest);
 }
 
-void ur5Behavior::stirringBehavior_1(std::string base_path, double a, double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
+void ur5Behavior::stirringBehavior_1(std::string base_path, double x, double y, double z, double a, double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
 
 	ROS_INFO("Strring Behavior 1");
 	ROS_INFO("Attach the end effector.");
@@ -628,17 +606,12 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a, double v, 
 	// getch();
 
 	ROS_INFO("Moving Above the Container");
-	action_position_top();
+	// action_position_top();
 	// getch();
 
 	ROS_INFO("Lowering the arm.");
-	action_position_down();
+	// action_position_down();
 	// getch();
-
-	double x = 0.054;
-	double y = -0.058;
-	double z = 0.66;  // 0.636
-	// X : 0.054, Y : -0.058, Z : 0.636
 
 	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 
@@ -646,6 +619,8 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a, double v, 
 	for (int i = 0; i <= numPoints; i++) {
 		points[i] = URScriptCommand(joint_angles[i], a, v);
 	}
+
+	move_arm_urscript(x, y, z, 3);
 
 	startRecording(base_path);
 	ros::Duration(0.5).sleep();
@@ -663,17 +638,14 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double a, double v, 
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	command_pub.publish(points[0]);
+	// command_pub.publish(points[0]);
+	move_arm_urscript(x, y, z - 0.06, 2);
 }
 
-void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v, double radius, int rotations, double timeDelay) {
+void ur5Behavior::stirringBehavior_2(std::string base_path, double x, double y, double z, double a , double v, double radius, int rotations, double timeDelay) {
 
 	close_gripper();
 	ROS_INFO("Strring Behavior 2");
-
-	double x = 0.054;
-	double y = -0.058;
-	double z = 0.66;  // 0.636
 
 	geometry_msgs::Pose pose_c = getPoseFromCoord(x, y, z);	
 	double* joint_angles_c = inverseKinematic(pose_c);
@@ -684,6 +656,8 @@ void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v,
 
 	joint_angles_c[5] -= radius;
 	point[1] = URScriptCommand(joint_angles_c, a, v);
+
+	move_arm_urscript(x, y, z, 3);
 
 	startRecording(base_path);
 	ros::Duration(0.5).sleep();
@@ -700,21 +674,19 @@ void ur5Behavior::stirringBehavior_2(std::string base_path, double a , double v,
 	ROS_INFO("Stopping the data recording node.");
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
+
+	move_arm_urscript(x, y, z - 0.06, 2);
 }
 
-void ur5Behavior::stirringBehavior_3(std::string base_path, double a , double v, double radius, double twist_angle, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
+void ur5Behavior::stirringBehavior_3(std::string base_path, double x, double y, double z, double a , double v, double radius, double twist_angle, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
 
 	close_gripper();
 	ROS_INFO("Strring Behavior 3");
 	
-	double x = 0.054;
-	double y = -0.058;
-	double z = 0.66;  // 0.636
-
-	// X : 0.054, Y : -0.058, Z : 0.636
-
 	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 	std_msgs::String points_c = URScriptCommand(inverseKinematic(getPoseFromCoord(x, y, z)), a, v);
+
+	move_arm_urscript(x, y, z, 3);
 
 	startRecording(base_path);
 	ros::Duration(0.5).sleep();
@@ -744,23 +716,22 @@ void ur5Behavior::stirringBehavior_3(std::string base_path, double a , double v,
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	command_pub.publish(points_c);
+	// command_pub.publish(points_c);
+	move_arm_urscript(x, y, z - 0.06, 3);
 }
 
-void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v, double radius, int rotations, int numPoints, double timeDelay) {
+void ur5Behavior::stirringBehavior_4(std::string base_path, double x, double y, double z, double a , double v, double radius, int rotations, int numPoints, double timeDelay) {
 
 	close_gripper();
 	ROS_INFO("Strring Behavior 4");
 	
-	double x = 0.054;
-	double y = -0.058;
-	double z = 0.66;  // 0.636
-
 	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 	std_msgs::String points[numPoints + 1];
 	for (int i = 0; i <= numPoints; i++) {
 		points[i] = URScriptCommand(joint_angles[i], a, v);
 	}
+
+	move_arm_urscript(x, y, z, 3);
 	
 	startRecording(base_path);
 	ros::Duration(0.5).sleep();
@@ -769,11 +740,8 @@ void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v,
 		std::cout << "[ INFO] Rotations : " << rotations << "\n";
 		
 		for (int i = 1; i <= numPoints; i++) {
-			// command_pub.publish(points[0]);
-			// ros::Duration(0.90).sleep();
-
 			command_pub.publish(points[i]);
-			ros::Duration(0.90).sleep();
+			ros::Duration(timeDelay).sleep();
 
 			int j = (i + numPoints/2) % numPoints;
 			if (j == 0) {
@@ -782,7 +750,7 @@ void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v,
 			else {
 				command_pub.publish(points[j]);
 			}
-			ros::Duration(0.90).sleep();			
+			ros::Duration(timeDelay).sleep();			
 		}
 		rotations--;
 	}
@@ -791,31 +759,15 @@ void ur5Behavior::stirringBehavior_4(std::string base_path, double a , double v,
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	command_pub.publish(points[0]);
+	// command_pub.publish(points[0]);
+	move_arm_urscript(x, y, z - 0.06, 3);
 }
 
-void ur5Behavior::stirringBehavior_5(std::string base_path, double a, double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
+void ur5Behavior::stirringBehavior_5(std::string base_path, double x, double y, double z, double a, double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
 
 	ROS_INFO("Strring Behavior 5");
 	ROS_INFO("Attach the end effector.");
-	// getch();
 	close_gripper();
-	// getch();
-
-	ROS_INFO("Moving Above the Container");
-	// action_position_top();
-	action_position_top_urscript();
-	// getch();
-
-	ROS_INFO("Lowering the arm.");
-	// action_position_down();
-	// action_position_down_urscript();
-	// getch();
-
-	double x = 0.054;
-	double y = -0.058;
-	double z = 0.66;  // 0.66, 0.636, 0.556
-	// X : 0.054, Y : -0.058, Z : 0.636
 
 	double** joint_angles = getJointAnglesOnCircularPoints(x, y, z, radius, numPoints);
 
@@ -824,6 +776,8 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double a, double v, 
 		points[i] = URScriptCommand(joint_angles[i], a, v);
 	}
 
+	move_arm_urscript(x, y, z - 0.06, 3);
+
 	startRecording(base_path);
 	ros::Duration(0.5).sleep();
 
@@ -831,8 +785,8 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double a, double v, 
 		std::cout<<"[ INFO] Rotations : "<<rotations<<"\n";
 		for (int i = 1; i <= numPoints; i++) {
 			command_pub.publish(points[i]);
-			ros::Duration(3.0).sleep();
-			action_position_top_urscript();
+			ros::Duration(timeDelay).sleep();
+			move_arm_urscript(x, y, z - 0.06, 2);
 		}
 		rotations--;
 	}
@@ -841,7 +795,8 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double a, double v, 
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	command_pub.publish(points[0]);
+	// command_pub.publish(points[0]);
+	move_arm_urscript(x, y, z - 0.06, 3);
 }
 
 int main(int argc, char **argv) {
@@ -859,7 +814,7 @@ int main(int argc, char **argv) {
     std::cout << "Time Stamp: " << curr_time << std::endl;
 
     std::string robotName = "ur5";
-    std::vector<std::string> tools = {"placticspoon", "metalspoon"};
+    std::vector<std::string> tools = {"placticspoon", "metalspoon", "chopstick"};
     std::vector<std::string> contents = {"chickpea", "wheat"};
 
     std::string tool = getLabelFromUser(tools);
@@ -875,44 +830,63 @@ int main(int argc, char **argv) {
     std::cout << "If the path above looks good, press ENTER, otherwise press Ctrl+c? " << "\n";
     getch();
 
+    std::map<std::string, double> toolsX;
+    toolsX["placticspoon"] = 0.064;
+    toolsX["metalspoon"] = 0.044;
+    toolsX["chopstick"] = 0.064;
+
+    std::map<std::string, double> toolsY;
+    toolsY["placticspoon"] = -0.048;
+    toolsY["metalspoon"] = -0.048;
+    toolsY["chopstick"] = -0.078;
+
+    std::map<std::string, double> toolsZ;
+    toolsZ["placticspoon"] = 0.66;
+    toolsZ["metalspoon"] = 0.66;
+    toolsZ["chopstick"] = 0.58;
+    
+    double tool_x = toolsX[tool];
+    double tool_y = toolsY[tool];
+    double tool_z = toolsZ[tool];
+    std::cout << tool << ", X: " << tool_x << ", Y: " << tool_y << ", Z: " << tool_z << std::endl;
+    
 	ur5Behavior Obj;
 
 	std::string behaviorName = "behavior-1-look";
-	Obj.lookBehavior(sensorDataPath + behaviorName + "/", 1.0);
+	Obj.lookBehavior(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.0);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 	
 	behaviorName = "behavior-2-slow";
-	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", 0.1, 0.1, 0.025, 5, 10, 1);
+	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 0.1, 0.1, 0.025, 5, 10, 1);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 	
 	behaviorName = "behavior-2-fast";
-	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", 1, 1, 0.025, 5, 10, 0.4);
+	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1, 1, 0.025, 5, 10, 0.4);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
 	behaviorName = "behavior-3";
-	Obj.stirringBehavior_2(sensorDataPath + behaviorName + "/", 1.5, 1.5, 1.0, 5, 0.75);
+	Obj.stirringBehavior_2(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 1.0, 5, 0.75);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
 	behaviorName = "behavior-4";
-	Obj.stirringBehavior_3(sensorDataPath + behaviorName + "/", 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
+	Obj.stirringBehavior_3(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
 	behaviorName = "behavior-5";
-	Obj.stirringBehavior_4(sensorDataPath + behaviorName + "/", 1.5, 1.5, 0.02, 5, 10, 2);
+	Obj.stirringBehavior_4(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 0.02, 5, 10, 0.9);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
 	behaviorName = "behavior-6";
-	Obj.stirringBehavior_5(sensorDataPath + behaviorName + "/", 0.1, 0.1, 0.025, 1, 10, 1);
+	Obj.stirringBehavior_5(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 0.1, 0.1, 0.025, 1, 10, 3.0);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
-	Obj.action_position_top_urscript();
 	Obj.open_gripper();
 	spinner.stop();
 
