@@ -34,9 +34,10 @@ roslaunch joint_recorder recordingService.launch numTopics:=3 topicName1:=/joint
 
 python src/UR5-ros-melodic/digit/src/recordTouchData_json.py
 
-python /home/pc1/paper5/data_processing/make_videos.py
+python data_processing/make_videos.py
+
+rosrun image_view image_view image:=/camera/color/image_raw
 
 rosrun ur5_demos tool_behaviors
 
-rosrun image_view image_view image:=/camera/color/image_raw
 ```
