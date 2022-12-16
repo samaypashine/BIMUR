@@ -6,16 +6,18 @@ from digit_interface.digit import Digit
 from digit_interface.digit_handler import DigitHandler
 
 
-digit = Digit("D20501", "Left Gripper")
+digit = Digit("D20521", "Left Gripper")  # D20501
 print("digit: ", digit.dev_name)
 digit.connect()
 digit.set_intensity(Digit.LIGHTING_MAX)
 
-qvga_res = Digit.STREAMS["VGA"]
+# qvga_res = Digit.STREAMS["VGA"]
+qvga_res = Digit.STREAMS["QVGA"]
 digit.set_resolution(qvga_res)
 
-fps_30 = Digit.STREAMS["VGA"]["fps"]["15fps"]
-digit.set_fps(fps_30)
+# fps = Digit.STREAMS["VGA"]["fps"]["15fps"]
+fps = Digit.STREAMS["QVGA"]["fps"]["30fps"]
+digit.set_fps(fps)
 
 record_info_path = "src/UR5-ros-melodic/digit/src/record_info.json"
 curr_path = ""
@@ -46,10 +48,5 @@ while True:
 		print("digit: ", digit.dev_name)
 		digit.connect()
 		digit.set_intensity(Digit.LIGHTING_MAX)
-
-		qvga_res = Digit.STREAMS["QVGA"]
 		digit.set_resolution(qvga_res)
-
-		fps_30 = Digit.STREAMS["QVGA"]["fps"]["30fps"]
-		digit.set_fps(fps_30)
-
+		digit.set_fps(fps)

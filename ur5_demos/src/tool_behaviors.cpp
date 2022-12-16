@@ -587,7 +587,7 @@ void ur5Behavior::move_arm_urscript(double x, double y, double z, double timeDel
 void ur5Behavior::lookBehavior(std::string base_path, double x, double y, double z, double interval_time = 1.0, double a = 1.5, double v = 1.5) {
 
 	ROS_INFO("Inside Look Behavior.");
-	move_arm_urscript(x, y, z - 0.06, 2);
+	move_arm_urscript(x, y, z - 0.08, 3);
 
     startRecording(base_path);
 	ros::Duration(interval_time).sleep();
@@ -639,7 +639,7 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double x, double y, 
 	clientObj.call(srvRequest);
 
 	// command_pub.publish(points[0]);
-	move_arm_urscript(x, y, z - 0.06, 2);
+	move_arm_urscript(x, y, z - 0.08, 2);
 }
 
 void ur5Behavior::stirringBehavior_2(std::string base_path, double x, double y, double z, double a , double v, double radius, int rotations, double timeDelay) {
@@ -675,7 +675,7 @@ void ur5Behavior::stirringBehavior_2(std::string base_path, double x, double y, 
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	move_arm_urscript(x, y, z - 0.06, 2);
+	move_arm_urscript(x, y, z - 0.08, 2);
 }
 
 void ur5Behavior::stirringBehavior_3(std::string base_path, double x, double y, double z, double a , double v, double radius, double twist_angle, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
@@ -717,7 +717,7 @@ void ur5Behavior::stirringBehavior_3(std::string base_path, double x, double y, 
 	clientObj.call(srvRequest);
 
 	// command_pub.publish(points_c);
-	move_arm_urscript(x, y, z - 0.06, 3);
+	move_arm_urscript(x, y, z - 0.08, 3);
 }
 
 void ur5Behavior::stirringBehavior_4(std::string base_path, double x, double y, double z, double a , double v, double radius, int rotations, int numPoints, double timeDelay) {
@@ -760,7 +760,7 @@ void ur5Behavior::stirringBehavior_4(std::string base_path, double x, double y, 
 	clientObj.call(srvRequest);
 
 	// command_pub.publish(points[0]);
-	move_arm_urscript(x, y, z - 0.06, 3);
+	move_arm_urscript(x, y, z - 0.08, 3);
 }
 
 void ur5Behavior::stirringBehavior_5(std::string base_path, double x, double y, double z, double a, double v, double radius, int rotations = 5, int numPoints = 10, double timeDelay = 0.275) {
@@ -776,7 +776,7 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double x, double y, 
 		points[i] = URScriptCommand(joint_angles[i], a, v);
 	}
 
-	move_arm_urscript(x, y, z - 0.06, 3);
+	move_arm_urscript(x, y, z - 0.08, 3);
 
 	startRecording(base_path);
 	ros::Duration(0.5).sleep();
@@ -786,7 +786,7 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double x, double y, 
 		for (int i = 1; i <= numPoints; i++) {
 			command_pub.publish(points[i]);
 			ros::Duration(timeDelay).sleep();
-			move_arm_urscript(x, y, z - 0.06, 2);
+			move_arm_urscript(x, y, z - 0.08, 2);
 		}
 		rotations--;
 	}
@@ -796,7 +796,7 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double x, double y, 
 	clientObj.call(srvRequest);
 
 	// command_pub.publish(points[0]);
-	move_arm_urscript(x, y, z - 0.06, 3);
+	move_arm_urscript(x, y, z - 0.08, 3);
 }
 
 int main(int argc, char **argv) {
@@ -814,8 +814,11 @@ int main(int argc, char **argv) {
     std::cout << "Time Stamp: " << curr_time << std::endl;
 
     std::string robotName = "ur5";
-    std::vector<std::string> tools = {"placticspoon", "metalspoon", "chopstick"};
-    std::vector<std::string> contents = {"chickpea", "wheat"};
+    std::vector<std::string> tools = {"metal-scissor", "metal-whisk", "plastic-spoon", "plastic-knife",
+    								  "wooden-chopstick", "wooden-fork"};  // metal-spoon
+    std::vector<std::string> contents = {"chickpea", "wheat", "split-green-pea", "kidney-bean", "chia-seed",
+										 "salt", "cane-sugar", "water", "detergent", "empty", "plastic-bead",
+										 "styrofoam-bead", "wooden-button", "glass-bead", "metal-nut-bolt"};
 
     std::string tool = getLabelFromUser(tools);
     std::string content = getLabelFromUser(contents);
@@ -831,19 +834,31 @@ int main(int argc, char **argv) {
     getch();
 
     std::map<std::string, double> toolsX;
-    toolsX["placticspoon"] = 0.064;
-    toolsX["metalspoon"] = 0.044;
-    toolsX["chopstick"] = 0.064;
+    toolsX["metal-scissor"] = 0.054;
+    toolsX["metal-whisk"] = 0.054;
+    toolsX["metal-spoon"] = 0.044;
+    toolsX["plastic-spoon"] = 0.064;
+    toolsX["plastic-knife"] = 0.054;
+    toolsX["wooden-chopstick"] = 0.064;
+    toolsX["wooden-fork"] = 0.074;
 
     std::map<std::string, double> toolsY;
-    toolsY["placticspoon"] = -0.048;
-    toolsY["metalspoon"] = -0.048;
-    toolsY["chopstick"] = -0.078;
+    toolsY["metal-scissor"] = -0.038;
+    toolsY["metal-whisk"] = -0.038;
+    toolsY["metal-spoon"] = -0.048;
+    toolsY["plastic-spoon"] = -0.048;
+    toolsY["plastic-knife"] = -0.058;
+    toolsY["wooden-chopstick"] = -0.078;
+    toolsY["wooden-fork"] = -0.068;
 
     std::map<std::string, double> toolsZ;
-    toolsZ["placticspoon"] = 0.66;
-    toolsZ["metalspoon"] = 0.66;
-    toolsZ["chopstick"] = 0.58;
+    toolsZ["metal-scissor"] = 0.7;
+    toolsZ["metal-whisk"] = 0.67;
+    toolsZ["metal-spoon"] = 0.66;
+    toolsZ["plastic-spoon"] = 0.66;
+    toolsZ["plastic-knife"] = 0.63;
+    toolsZ["wooden-chopstick"] = 0.58;
+    toolsZ["wooden-fork"] = 0.6;
     
     double tool_x = toolsX[tool];
     double tool_y = toolsY[tool];
@@ -852,37 +867,37 @@ int main(int argc, char **argv) {
     
 	ur5Behavior Obj;
 
-	std::string behaviorName = "behavior-1-look";
+	std::string behaviorName = "1-look";
 	Obj.lookBehavior(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.0);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 	
-	behaviorName = "behavior-2-slow";
+	behaviorName = "2-stirring-slow";
 	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 0.1, 0.1, 0.025, 5, 10, 1);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 	
-	behaviorName = "behavior-2-fast";
+	behaviorName = "3-stirring-fast";
 	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1, 1, 0.025, 5, 10, 0.4);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
-	behaviorName = "behavior-3";
-	Obj.stirringBehavior_2(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 1.0, 5, 0.75);
-	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
+	// behaviorName = "behavior-3";
+	// Obj.stirringBehavior_2(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 1.0, 5, 0.75);
+	// ros::Duration(2.0).sleep();
+	// checkData(sensorDataPath + behaviorName + "/");
 
-	behaviorName = "behavior-4";
+	behaviorName = "4-stirring-twist";
 	Obj.stirringBehavior_3(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
-	behaviorName = "behavior-5";
+	behaviorName = "5-whisk";
 	Obj.stirringBehavior_4(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 0.02, 5, 10, 0.9);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
 
-	behaviorName = "behavior-6";
+	behaviorName = "6-poke";
 	Obj.stirringBehavior_5(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 0.1, 0.1, 0.025, 1, 10, 3.0);
 	ros::Duration(2.0).sleep();
 	checkData(sensorDataPath + behaviorName + "/");
