@@ -6,7 +6,7 @@ from digit_interface.digit import Digit
 from digit_interface.digit_handler import DigitHandler
 
 
-digit = Digit("D20521", "Left Gripper")  # D20501
+digit = Digit("D20506", "Left Gripper")  # D20501, D20521
 print("digit: ", digit.dev_name)
 digit.connect()
 digit.set_intensity(Digit.LIGHTING_MAX)

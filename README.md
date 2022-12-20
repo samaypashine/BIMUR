@@ -20,6 +20,13 @@ Bimur (Bi-manual UR5). This repository is for packages related to UR5 at MuLIP L
 
 - Check camera feed before recording (`rosrun image_view image_view image:=/camera/color/image_raw`).
 - Hold the container using left arm gripper without turning the left arm on. If needed turn on the left arm to set up the arm and gripper position, and then turn it off.
+- Make sure the lights in the lab are at full intensity.
+- Place the containers tightly completely inside the left gripper.
+- Before placing shake the container to level the contents inside.
+- Use liquid objects in the end after finishing all the objects.
+- Finish one trial with all the objects using one tool, then switch to the next tool and repeat until all the tools are used. Then, repeat the same for the next trial.
+- Check touch sensor recorded images. If images are glitchy, restart the sensor and record again.
+- After each trial, clean the tool and table if needed.
 
 ```
 sudo chmod 777 /dev/ttyUSB0

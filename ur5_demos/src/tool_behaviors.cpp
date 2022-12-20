@@ -638,8 +638,8 @@ void ur5Behavior::stirringBehavior_1(std::string base_path, double x, double y, 
 	srvRequest.request.command.data ="stop";
 	clientObj.call(srvRequest);
 
-	// command_pub.publish(points[0]);
-	move_arm_urscript(x, y, z - 0.08, 2);
+	command_pub.publish(points[0]);
+	// move_arm_urscript(x, y, z - 0.08, 2);
 }
 
 void ur5Behavior::stirringBehavior_2(std::string base_path, double x, double y, double z, double a , double v, double radius, int rotations, double timeDelay) {
@@ -786,7 +786,7 @@ void ur5Behavior::stirringBehavior_5(std::string base_path, double x, double y, 
 		for (int i = 1; i <= numPoints; i++) {
 			command_pub.publish(points[i]);
 			ros::Duration(timeDelay).sleep();
-			move_arm_urscript(x, y, z - 0.08, 2);
+			move_arm_urscript(x, y, z - 0.06, 2);
 		}
 		rotations--;
 	}
@@ -844,7 +844,7 @@ int main(int argc, char **argv) {
 
     std::map<std::string, double> toolsY;
     toolsY["metal-scissor"] = -0.038;
-    toolsY["metal-whisk"] = -0.038;
+    toolsY["metal-whisk"] = -0.048;
     toolsY["metal-spoon"] = -0.048;
     toolsY["plastic-spoon"] = -0.048;
     toolsY["plastic-knife"] = -0.058;
@@ -853,7 +853,7 @@ int main(int argc, char **argv) {
 
     std::map<std::string, double> toolsZ;
     toolsZ["metal-scissor"] = 0.7;
-    toolsZ["metal-whisk"] = 0.67;
+    toolsZ["metal-whisk"] = 0.68;
     toolsZ["metal-spoon"] = 0.66;
     toolsZ["plastic-spoon"] = 0.66;
     toolsZ["plastic-knife"] = 0.63;
