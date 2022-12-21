@@ -177,7 +177,7 @@ void deleteTrial(std::string base_path) {
 	}
 }
 
-void checkData(std::string base_path) {
+bool checkData(std::string base_path) {
 
 	bool dataIssue = false;
 
@@ -212,6 +212,8 @@ void checkData(std::string base_path) {
 	if (dataIssue) {
 		deleteTrial(base_path);
 	}
+
+	return dataIssue;
 }
 
 class ur5Behavior {
@@ -866,42 +868,55 @@ int main(int argc, char **argv) {
     std::cout << tool << ", X: " << tool_x << ", Y: " << tool_y << ", Z: " << tool_z << std::endl;
     
 	ur5Behavior Obj;
+	bool dataIssue = false;
 
 	std::string behaviorName = "1-look";
 	Obj.lookBehavior(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.0);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
+	dataIssue = checkData(sensorDataPath + behaviorName + "/");
 	
+	if (!dataIssue){
 	behaviorName = "2-stirring-slow";
 	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 0.1, 0.1, 0.025, 5, 10, 1);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
+	dataIssue = checkData(sensorDataPath + behaviorName + "/");
+	}
 	
+	if (!dataIssue){
 	behaviorName = "3-stirring-fast";
 	Obj.stirringBehavior_1(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1, 1, 0.025, 5, 10, 0.4);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
+	dataIssue = checkData(sensorDataPath + behaviorName + "/");
+	}
 
+	// if (!dataIssue){
 	// behaviorName = "behavior-3";
 	// Obj.stirringBehavior_2(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 1.0, 5, 0.75);
 	// ros::Duration(2.0).sleep();
-	// checkData(sensorDataPath + behaviorName + "/");
+	// dataIssue = checkData(sensorDataPath + behaviorName + "/");
+	// }
 
+	if (!dataIssue){
 	behaviorName = "4-stirring-twist";
 	Obj.stirringBehavior_3(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 0.02, 1.0, 5, 10, 1.5);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
+	dataIssue = checkData(sensorDataPath + behaviorName + "/");
+	}
 
+	if (!dataIssue){
 	behaviorName = "5-whisk";
 	Obj.stirringBehavior_4(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 1.5, 1.5, 0.02, 5, 10, 0.9);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
+	dataIssue = checkData(sensorDataPath + behaviorName + "/");
+	}
 
+	if (!dataIssue){
 	behaviorName = "6-poke";
 	Obj.stirringBehavior_5(sensorDataPath + behaviorName + "/", tool_x, tool_y, tool_z, 0.1, 0.1, 0.025, 1, 10, 3.0);
 	ros::Duration(2.0).sleep();
-	checkData(sensorDataPath + behaviorName + "/");
-
+	dataIssue = checkData(sensorDataPath + behaviorName + "/");
+	}
+	
 	Obj.open_gripper();
 	spinner.stop();
 

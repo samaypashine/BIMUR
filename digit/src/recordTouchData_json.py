@@ -6,7 +6,8 @@ from digit_interface.digit import Digit
 from digit_interface.digit_handler import DigitHandler
 
 
-digit = Digit("D20506", "Left Gripper")  # D20501, D20521
+sensor_id = "D20506" # D20501, D20506, D20521
+digit = Digit(sensor_id, "Left Gripper")
 print("digit: ", digit.dev_name)
 digit.connect()
 digit.set_intensity(Digit.LIGHTING_MAX)
@@ -44,7 +45,7 @@ while True:
 			curr_count += 1
 	except Exception as e:
 		print(e)
-		digit = Digit("D20501", "Left Gripper")
+		digit = Digit(sensor_id, "Left Gripper")
 		print("digit: ", digit.dev_name)
 		digit.connect()
 		digit.set_intensity(Digit.LIGHTING_MAX)
