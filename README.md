@@ -1,6 +1,6 @@
-# Bimur
+# BIMUR
 
-Bimur (Bi-manual UR5). This repository is for packages related to UR5 at MuLIP Lab, Tufts.
+BIMUR (Bi-manual UR5). This repository is for packages related to UR5 at MuLIP Lab, Tufts.
 
 ## Requirements
 
